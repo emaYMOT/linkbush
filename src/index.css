@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+html,
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: #fafaf9;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
