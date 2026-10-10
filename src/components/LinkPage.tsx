@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import type { Theme } from '../lib/theme'
-import { backgroundStyle, buttonStyle, loadFont } from '../lib/theme'
+import { backgroundStyle, buttonStyle, edgeColors, loadFont } from '../lib/theme'
 import { Icon, resolveIcon } from '../lib/icons'
 
 export type LinkPageData = {
@@ -22,6 +22,7 @@ export default function LinkPage({ data, theme, preview = false }: { data: LinkP
   useEffect(() => loadFont(theme.font), [theme.font])
 
   const btn = buttonStyle(theme)
+  const edges = edgeColors(theme)
 
   return (
     <div
@@ -33,6 +34,14 @@ export default function LinkPage({ data, theme, preview = false }: { data: LinkP
       {/* En el celular el fondo va en una capa fija del alto máximo de la pantalla (lvh): así el degradado
           o la imagen siguen detrás de las barras del navegador y del rebote del scroll, sin franjas sólidas. */}
       {!preview && <div aria-hidden className="fixed inset-x-0 top-0 h-lvh" style={backgroundStyle(theme)} />}
+      {/* Safari en iPhone (iOS 26+) pinta la barra de estado y la barra inferior con el color sólido de los
+          elementos fijos pegados al borde. Estas franjas le dan el color exacto del fondo en cada borde. */}
+      {!preview && (
+        <>
+          <div aria-hidden className="fixed inset-x-0 top-0 h-[max(4px,env(safe-area-inset-top))]" style={{ backgroundColor: edges.top }} />
+          <div aria-hidden className="fixed inset-x-0 bottom-0 h-[max(4px,env(safe-area-inset-bottom))]" style={{ backgroundColor: edges.bottom }} />
+        </>
+      )}
       <main className="relative flex w-full max-w-[560px] flex-col items-center text-center">
         {data.avatar_url && (
           <img src={data.avatar_url} alt="" className="mb-4 h-24 w-24 rounded-full object-cover shadow-md" />

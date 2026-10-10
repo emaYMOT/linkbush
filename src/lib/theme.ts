@@ -106,6 +106,14 @@ export function backgroundStyle(t: Theme): CSSProperties {
   return { background: t.bgColor }
 }
 
+/** Colores del fondo en el borde superior e inferior de la pantalla (según la dirección del degradado). */
+export function edgeColors(t: Theme): { top: string; bottom: string } {
+  if (t.bgType !== 'gradient') return { top: t.bgColor, bottom: t.bgColor }
+  const [a, b, angle] = t.bgGradient
+  // CSS: 180° va de arriba (a) hacia abajo (b); 0° va de abajo (a) hacia arriba (b)
+  return Math.cos((angle * Math.PI) / 180) <= 0 ? { top: a, bottom: b } : { top: b, bottom: a }
+}
+
 const RADIUS: Record<ButtonShape, string> = { square: '4px', rounded: '14px', pill: '999px' }
 
 /** Color de borde que usa cada estilo cuando no se ha elegido uno. */

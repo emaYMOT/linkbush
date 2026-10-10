@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import LinkPage from '../components/LinkPage'
 import { supabase, type Link, type Page } from '../lib/supabase'
-import { resolveTheme } from '../lib/theme'
+import { edgeColors, resolveTheme } from '../lib/theme'
 
 type State = { status: 'loading' } | { status: 'notfound' } | { status: 'ok'; page: Page; links: Link[] }
 
@@ -33,8 +33,10 @@ export default function PublicPage() {
   useEffect(() => {
     if (state.status !== 'ok') return
     const t = resolveTheme(state.page.theme)
-    const [top, bottom] = t.bgType === 'gradient' ? t.bgGradient : [t.bgColor, t.bgColor]
-    document.body.style.background = bottom
+    const { top } = edgeColors(t)
+    // Color de respaldo del lienzo (lo que el navegador muestra fuera del contenido)
+    document.documentElement.style.backgroundColor = top
+    document.body.style.background = 'transparent'
     // Color de la barra superior del navegador en Android (y de respaldo en iPhone)
     let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
     if (!meta) {
