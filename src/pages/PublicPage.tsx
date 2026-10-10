@@ -33,7 +33,16 @@ export default function PublicPage() {
   useEffect(() => {
     if (state.status !== 'ok') return
     const t = resolveTheme(state.page.theme)
-    document.body.style.background = t.bgType === 'gradient' ? t.bgGradient[1] : t.bgColor
+    const [top, bottom] = t.bgType === 'gradient' ? t.bgGradient : [t.bgColor, t.bgColor]
+    document.body.style.background = bottom
+    // Color de la barra superior del navegador en Android (y de respaldo en iPhone)
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = 'theme-color'
+      document.head.appendChild(meta)
+    }
+    meta.content = top
   }, [state])
 
   if (state.status === 'loading') {

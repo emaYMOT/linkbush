@@ -25,10 +25,15 @@ export default function LinkPage({ data, theme, preview = false }: { data: LinkP
 
   return (
     <div
-      className={`flex w-full justify-center px-5 py-12 ${preview ? 'min-h-full' : 'min-h-dvh'}`}
-      style={{ ...backgroundStyle(theme), color: theme.textColor, fontFamily: `'${theme.font}', system-ui, sans-serif` }}
+      className={`relative flex w-full justify-center px-5 ${
+        preview ? 'min-h-full py-12' : 'min-h-dvh pt-[max(3rem,calc(env(safe-area-inset-top)+1.5rem))] pb-[max(3rem,calc(env(safe-area-inset-bottom)+1.5rem))]'
+      }`}
+      style={{ ...(preview ? backgroundStyle(theme) : {}), color: theme.textColor, fontFamily: `'${theme.font}', system-ui, sans-serif` }}
     >
-      <main className="flex w-full max-w-[560px] flex-col items-center text-center">
+      {/* En el celular el fondo va en una capa fija del alto máximo de la pantalla (lvh): así el degradado
+          o la imagen siguen detrás de las barras del navegador y del rebote del scroll, sin franjas sólidas. */}
+      {!preview && <div aria-hidden className="fixed inset-x-0 top-0 h-lvh" style={backgroundStyle(theme)} />}
+      <main className="relative flex w-full max-w-[560px] flex-col items-center text-center">
         {data.avatar_url && (
           <img src={data.avatar_url} alt="" className="mb-4 h-24 w-24 rounded-full object-cover shadow-md" />
         )}
