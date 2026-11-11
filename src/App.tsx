@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { createHashRouter, Outlet, RouterProvider, ScrollRestoration } from 'react-router-dom'
+import ErrorApp from './pages/ErrorApp'
 import NotFound from './pages/NotFound'
 import SiteLayout from './pages/SiteLayout'
 
@@ -19,6 +20,8 @@ function Root() {
 const router = createHashRouter([
   {
     element: <Root />,
+    // Cualquier fallo al mostrar una pantalla (también al bajar una parte del panel tras una publicación nueva).
+    errorElement: <ErrorApp />,
     children: [
       { path: '/', element: <NotFound /> },
       {
