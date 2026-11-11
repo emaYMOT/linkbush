@@ -10,7 +10,9 @@ export function clearPublicCache() {
 }
 
 export function useCached<T>(key: string, loader: () => Promise<T>) {
-  const [state, setState] = useState<{ data?: T; error?: string }>(() => ({ data: values.get(key) as T | undefined }))
+  // El estado recuerda de qué clave es: al cambiar de página o de carta en la misma pestaña,
+  // no se muestran ni un instante los datos de la anterior (eso mandaba al inicio de la página vieja).
+  const [state, setState] = useState<{ key: string; data?: T; error?: string }>(() => ({ key, data: values.get(key) as T | undefined }))
 
   useEffect(() => {
     let alive = true
@@ -22,11 +24,11 @@ export function useCached<T>(key: string, loader: () => Promise<T>) {
     promise.then(
       (data) => {
         values.set(key, data)
-        if (alive) setState({ data })
+        if (alive) setState({ key, data })
       },
       (error: Error) => {
         pending.delete(key)
-        if (alive) setState({ error: error.message })
+        if (alive) setState({ key, error: error.message })
       },
     )
     return () => {
@@ -35,5 +37,6 @@ export function useCached<T>(key: string, loader: () => Promise<T>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
-  return state
+  if (state.key !== key) return { data: values.get(key) as T | undefined }
+  return { data: state.data, error: state.error }
 }
