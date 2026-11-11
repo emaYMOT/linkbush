@@ -154,7 +154,7 @@ export default function DesignEditor() {
         ))}
       </nav>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="space-y-5">
           <Card id="plantillas" title="Plantillas">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

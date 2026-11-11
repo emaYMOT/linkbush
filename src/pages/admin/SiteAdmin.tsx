@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronLeft, ExternalLink, MousePointerClick, Palette, Settings, Store, UserRound, UtensilsCrossed } from 'lucide-react'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { limpiarEnSegundoPlano } from '../../lib/archivos'
@@ -35,6 +35,19 @@ export default function SiteAdmin() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const site = sites?.find((s) => s.id === siteId)
+  const pestanas = useRef<HTMLElement>(null)
+  const tabActual = pathname.split('/')[3] ?? ''
+
+  // En celular las pestañas no caben: la abierta se desliza a la vista (sin animación: es navegación).
+  useEffect(() => {
+    const activa = pestanas.current?.querySelector<HTMLElement>('[aria-current=page]')
+    const nav = pestanas.current
+    if (!activa || !nav) return
+    const izquierda = activa.offsetLeft - nav.offsetLeft
+    if (izquierda < nav.scrollLeft || izquierda + activa.offsetWidth > nav.scrollLeft + nav.clientWidth) {
+      nav.scrollLeft = izquierda - (nav.clientWidth - activa.offsetWidth) / 2
+    }
+  }, [tabActual, siteId, !!site])
 
   if (!sites) return null
   if (!site) {
@@ -100,13 +113,13 @@ export default function SiteAdmin() {
               <ExternalLink size={16} /> <span className="hidden sm:inline">Ver página</span><span className="sr-only sm:hidden">Ver página (otra pestaña)</span>
             </a>
           </div>
-          <nav className="no-scrollbar -mx-4 mt-1.5 flex gap-0.5 overflow-x-auto px-3" aria-label="Secciones de la página">
+          <nav ref={pestanas} className="no-scrollbar -mx-4 mt-1.5 flex gap-0.5 overflow-x-auto px-2 sm:px-3" aria-label="Secciones de la página">
             {tabs.map(([to, label, Icon]) => (
               <NavLink
                 key={to}
                 to={`${base}/${to}`}
                 className={({ isActive }) =>
-                  `relative flex shrink-0 items-center gap-1.5 px-3 pt-2 pb-2.5 text-[0.92rem] font-semibold whitespace-nowrap ${isActive ? 'text-tinta after:absolute after:inset-x-2.5 after:bottom-0 after:h-[2.5px] after:rounded-full after:bg-resalte' : 'text-gris hover:text-tinta'}`
+                  `relative flex shrink-0 items-center gap-1.5 px-2.5 pt-2 pb-2.5 text-[0.92rem] font-semibold whitespace-nowrap sm:px-3 ${isActive ? 'text-tinta after:absolute after:inset-x-2 after:bottom-0 after:h-[2.5px] after:rounded-full after:bg-resalte' : 'text-gris hover:text-tinta'}`
                 }
               >
                 {({ isActive }) => (

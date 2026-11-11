@@ -1,4 +1,4 @@
-import { LogOut, Monitor, Moon, Shrub, Sun } from 'lucide-react'
+import { LogOut, Monitor, Moon, Shrub, Sun, Undo2 } from 'lucide-react'
 import { Button } from '../../components/Modal'
 import { useCallback, useEffect, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
@@ -153,7 +153,7 @@ export function EmptyState({ icon, children, action }: { icon?: React.ReactNode;
 /** Tarjeta de los formularios del panel. Con `id`, se puede saltar a ella desde un índice. */
 export function Card({ title, description, children, id, aside }: { title?: string; description?: string; children: React.ReactNode; id?: string; aside?: React.ReactNode }) {
   return (
-    <section id={id} className="sombra-panel rounded-[1.4rem] border border-linea bg-superficie p-5 sm:p-6">
+    <section id={id} className="sombra-panel rounded-[1.4rem] border border-linea bg-superficie p-4 sm:p-6">
       {(title || aside) && (
         <div className="flex items-start justify-between gap-3">
           {title && <h2 className="font-ui-display text-[1.3rem] leading-tight tracking-[-0.01em]">{title}</h2>}
@@ -173,14 +173,21 @@ export function Card({ title, description, children, id, aside }: { title?: stri
 export function BarraGuardar({ dirty, busy, onSave, onDiscard, label, extra }: { dirty: boolean; busy: boolean; onSave: () => void; onDiscard?: () => void; label: string; extra?: React.ReactNode }) {
   return (
     <div className="sticky bottom-0 z-20 -mx-4 mt-2 px-4 pt-2 pb-[max(.75rem,env(safe-area-inset-bottom))] sm:mx-0 sm:px-0">
-      <div className={`flex items-center gap-2 rounded-2xl border bg-superficie/95 p-2 pl-4 backdrop-blur-md ${dirty ? 'sombra-flotante border-resalte/30' : 'sombra-panel border-linea'}`}>
-        <span className="mr-auto flex items-center gap-2 text-sm text-gris" aria-live="polite">
-          <span aria-hidden className={`size-2 rounded-full ${dirty ? 'bg-resalte' : 'bg-exito'}`} />
-          {dirty ? 'Cambios sin guardar' : 'Todo guardado'}
+      <div className={`flex items-center gap-1.5 rounded-2xl border bg-superficie/95 p-2 pl-3.5 backdrop-blur-md sm:gap-2 sm:pl-4 ${dirty ? 'sombra-flotante border-resalte/30' : 'sombra-panel border-linea'}`}>
+        {/* En celular solo el punto (el texto queda para lectores de pantalla): así los botones caben en una línea. */}
+        <span className="mr-auto flex min-w-0 items-center gap-2 text-sm text-gris" aria-live="polite">
+          <span aria-hidden className={`size-2 shrink-0 rounded-full ${dirty ? 'bg-resalte' : 'bg-exito'}`} />
+          <span className="max-sm:sr-only truncate">{dirty ? 'Cambios sin guardar' : 'Todo guardado'}</span>
         </span>
         {extra}
-        {dirty && onDiscard && <Button variant="ghost" onClick={onDiscard}>Descartar</Button>}
-        <Button onClick={onSave} busy={busy} disabled={!dirty}>{label}</Button>
+        {/* En celular, Descartar es solo un ícono: con texto, los tres botones no caben en 375 px. */}
+        {dirty && onDiscard && (
+          <Button variant="ghost" aria-label="Descartar cambios" title="Descartar cambios" className="px-3 whitespace-nowrap sm:px-4.5" onClick={onDiscard}>
+            <Undo2 size={18} aria-hidden className="sm:hidden" />
+            <span className="max-sm:hidden">Descartar</span>
+          </Button>
+        )}
+        <Button className="px-3.5 whitespace-nowrap sm:px-4.5" onClick={onSave} busy={busy} disabled={!dirty}>{label}</Button>
       </div>
     </div>
   )
