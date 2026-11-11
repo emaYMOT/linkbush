@@ -7,10 +7,19 @@ const POR_DEFECTO: Pick<Theme, 'botones' | 'avatar'> = {
   avatar: { aro: 'fino', forma: 'circulo' },
 }
 
-/** Completa un diseño guardado con las opciones que le falten. */
+const EFECTOS_VALIDOS: Theme['fondo']['efecto'][] = ['brasas', 'luciernagas', 'polvo', 'bengalas', 'burbujas', 'destellos', 'mar', 'luces', 'estrellas', 'bokeh', 'ninguno']
+
+/**
+ * Completa un diseño guardado con las opciones que le falten. Los efectos que ya no existen pasan a brasas,
+ * y el póster (función retirada: ahora lo cubre el efecto de fondo) se descarta.
+ */
 export function completarTema(t: Theme): Theme {
+  const { poster: _poster, ...fondo } = t.fondo as Theme['fondo'] & { poster?: unknown }
   return {
     ...t,
+    fondo: { ...fondo, efecto: EFECTOS_VALIDOS.includes(fondo.efecto) ? fondo.efecto : 'brasas' },
+    // Los grosores de textos y precios llegaron después: antes eran fijos en 400 y 500.
+    fuentes: { ...t.fuentes, pesoTextos: t.fuentes.pesoTextos ?? 400, pesoPrecios: t.fuentes.pesoPrecios ?? 500 },
     botones: { ...POR_DEFECTO.botones, ...t.botones },
     avatar: { ...POR_DEFECTO.avatar, ...t.avatar },
   }
@@ -36,7 +45,8 @@ export function variablesDe(t: Theme): Record<string, string> {
     '--font-sans': pilaDe(t.fuentes.textos),
     '--font-precio': pilaDe(t.fuentes.precios),
     '--peso-titulos': String(pesoCercano(t.fuentes.titulos, t.fuentes.pesoTitulos)),
-    '--peso-precios': String(pesoCercano(t.fuentes.precios, 500)),
+    '--peso-textos': String(pesoCercano(t.fuentes.textos, t.fuentes.pesoTextos ?? 400)),
+    '--peso-precios': String(pesoCercano(t.fuentes.precios, t.fuentes.pesoPrecios ?? 500)),
     '--desenfoque': `${Math.round((t.botones.difuminado ?? 47) * 0.3)}px`,
   }
 }
@@ -60,8 +70,9 @@ export function aplicarTema(t: Theme | null) {
   }
   const href = urlFuentes([
     { nombre: t.fuentes.titulos, pesos: [t.fuentes.pesoTitulos] },
-    { nombre: t.fuentes.textos, pesos: [400, 500, 600] },
-    { nombre: t.fuentes.precios, pesos: [500] },
+    // El grosor elegido para los textos, más los de botones y etiquetas (500 y 600).
+    { nombre: t.fuentes.textos, pesos: [t.fuentes.pesoTextos ?? 400, 500, 600] },
+    { nombre: t.fuentes.precios, pesos: [t.fuentes.pesoPrecios ?? 500] },
   ])
   if (link) {
     if (link.href !== href) link.href = href

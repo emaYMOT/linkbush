@@ -17,17 +17,18 @@ export interface Site {
   updated_at: string
 }
 
-export type Efecto = 'mar' | 'luces' | 'degradado' | 'estrellas' | 'aurora' | 'brasas' | 'bokeh' | 'confeti' | 'ondas' | 'cuadricula' | 'ninguno'
+export type Efecto = 'brasas' | 'luciernagas' | 'polvo' | 'bengalas' | 'burbujas' | 'destellos' | 'mar' | 'luces' | 'estrellas' | 'bokeh' | 'ninguno'
 export type EstiloBoton = 'vidrio' | 'solido' | 'borde' | 'degradado' | 'neon' | 'suave' | 'minimal' | 'relieve'
 export type FormaBoton = 'pildora' | 'redondeado' | 'suave' | 'recto' | 'hoja'
 export type SombraBoton = 'ninguna' | 'suave' | 'marcada' | 'flotante' | 'brillo'
 export type TamanoBoton = 'compacto' | 'normal' | 'grande'
-export type AroAvatar = 'ninguno' | 'fino' | 'doble' | 'brillo' | 'degradado' | 'historia' | 'giratorio' | 'pulso' | 'punteado'
+export type AroAvatar = 'ninguno' | 'fino' | 'doble' | 'brillo' | 'halo' | 'fuego' | 'resplandor' | 'degradado' | 'historia' | 'giratorio' | 'pulso' | 'punteado'
 export type FormaAvatar = 'circulo' | 'redondeado'
 
 /** Diseño de una página: se aplica como variables CSS al abrirla. */
 export interface Theme {
   plantilla: string | null // id de la plantilla de la que salió (solo informativo)
+  paleta?: string | null // id del tema de color aplicado (solo informativo; se pierde al editar un color)
   colores: {
     fondo: string
     fondo2: string // tarjetas y barras
@@ -43,10 +44,11 @@ export interface Theme {
     textos: string
     precios: string
     pesoTitulos: number
+    pesoTextos: number
+    pesoPrecios: number
   }
   fondo: {
     video: string | null
-    poster: string | null
     efecto: Efecto // se ve mientras carga el video o si no hay video
     tinte: string
     tinteFuerza: number // 0–100

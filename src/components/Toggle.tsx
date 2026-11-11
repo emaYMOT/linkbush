@@ -30,9 +30,9 @@ export function Switch({ checked, onChange, label, small, id }: { checked: boole
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
-      <span className={`${small ? 'h-6 w-10' : 'h-7 w-12'} rounded-full bg-gris/55 transition-colors duration-200 peer-checked:bg-exito peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-tinta`} />
+      <span className={`${small ? 'h-6 w-10' : 'h-7 w-12'} rounded-full bg-gris/40 shadow-[inset_0_1px_2px_rgb(0_0_0/.12)] transition-colors duration-200 ease-(--ease-salida) peer-checked:bg-exito peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-resalte`} />
       <span
-        className={`pointer-events-none absolute ${small ? 'top-3.5 left-3.5 size-4 peer-checked:translate-x-4' : 'top-3 left-3 size-5 peer-checked:translate-x-5'} rounded-full bg-white shadow-sm transition-transform duration-200`}
+        className={`pointer-events-none absolute ${small ? 'top-3.5 left-3.5 size-4 peer-checked:translate-x-4' : 'top-3 left-3 size-5 peer-checked:translate-x-5'} rounded-full bg-white shadow-[0_1px_3px_rgb(0_0_0/.25)] transition-transform duration-200 ease-(--ease-salida)`}
       />
     </span>
   )

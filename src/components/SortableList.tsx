@@ -44,12 +44,12 @@ function SortableRow({ id, children }: { id: string; children: ReactNode }) {
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-center gap-1 rounded-2xl border bg-superficie py-2 pr-2 pl-1 ${isDragging ? 'relative z-10 border-tinta/30 shadow-xl' : 'border-linea'}`}
+      className={`flex items-center gap-1 rounded-2xl border bg-superficie py-1.5 pr-1.5 pl-0.5 ${isDragging ? 'sombra-flotante relative z-10 border-resalte/40 ring-4 ring-resalte/10' : 'sombra-panel border-linea'}`}
     >
       <button
         ref={setActivatorNodeRef}
         type="button"
-        className="grid h-12 w-11 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-gris hover:bg-papel active:cursor-grabbing"
+        className="sin-presion grid h-11 w-9 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-gris/70 hover:bg-papel hover:text-tinta active:cursor-grabbing"
         aria-label="Arrastra para cambiar el orden"
         {...attributes}
         {...listeners}
@@ -73,15 +73,15 @@ export function moveInList<T extends { id: string }>(list: T[], id: string, dire
 export function MoveControls({ index, total, onMove }: { index: number; total: number; onMove: (direction: -1 | 1) => void }) {
   if (index < 0 || total < 2) return null
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-linea px-4 py-2">
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-papel px-4 py-1.5">
       <span className="text-sm text-gris">
         Posición {index + 1} de {total}
       </span>
       <div className="flex gap-1">
-        <button type="button" disabled={index === 0} onClick={() => onMove(-1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition-colors hover:bg-papel disabled:opacity-40">
+        <button type="button" disabled={index === 0} onClick={() => onMove(-1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold hover:bg-superficie disabled:opacity-40">
           <ArrowUp size={16} aria-hidden /> Subir
         </button>
-        <button type="button" disabled={index === total - 1} onClick={() => onMove(1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition-colors hover:bg-papel disabled:opacity-40">
+        <button type="button" disabled={index === total - 1} onClick={() => onMove(1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold hover:bg-superficie disabled:opacity-40">
           <ArrowDown size={16} aria-hidden /> Bajar
         </button>
       </div>
@@ -97,7 +97,7 @@ export function RowAction({ label, onClick, children, danger }: { label: string;
       onClick={onClick}
       aria-label={label}
       title={label}
-      className={`grid size-11 shrink-0 place-items-center rounded-xl transition ${danger ? 'text-gris hover:bg-peligro/8 hover:text-peligro' : 'text-tinta hover:bg-papel'}`}
+      className={`grid size-11 shrink-0 place-items-center rounded-xl ${danger ? 'text-gris hover:bg-peligro/8 hover:text-peligro' : 'text-gris hover:bg-papel hover:text-tinta'}`}
     >
       {children}
     </button>

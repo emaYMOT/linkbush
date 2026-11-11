@@ -1,7 +1,7 @@
 import { cloneElement, isValidElement, useId, type InputHTMLAttributes, type ReactElement, type TextareaHTMLAttributes } from 'react'
 
 const control =
-  'w-full rounded-xl border border-linea bg-superficie px-4 py-3 text-base text-tinta placeholder:text-gris/70 focus:border-tinta focus:outline-none focus:ring-2 focus:ring-tinta/10 aria-invalid:border-peligro aria-invalid:ring-peligro/15'
+  'w-full rounded-xl border border-linea bg-superficie px-3.5 py-2.5 text-base text-tinta sombra-panel transition-[border-color,box-shadow] duration-150 placeholder:text-gris/60 hover:border-tinta/25 focus:border-resalte focus:outline-none focus:ring-4 focus:ring-resalte/15 aria-invalid:border-peligro aria-invalid:ring-4 aria-invalid:ring-peligro/12'
 
 type ControlProps = { id?: string; 'aria-describedby'?: string; 'aria-invalid'?: boolean }
 
@@ -19,7 +19,7 @@ export function Field({ label, hint, error, prefix, children }: { label: string;
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block font-medium">{label}</label>
+      <label htmlFor={id} className="mb-1.5 block text-[0.95rem] font-medium">{label}</label>
       {prefix ? (
         <div className="relative">
           <span aria-hidden className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-gris">{prefix}</span>

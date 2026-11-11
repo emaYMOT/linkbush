@@ -2,7 +2,7 @@ import { store, type Collection, type RowOf } from './store'
 import { iconoSeccion } from './icons'
 import { temaDePlantilla } from './plantillas'
 import type { Category, LinkButton, MenuItem, PriceUnit, Site, Subcategory } from './types'
-import { palabras, slugify, VOCAB_PRESETS } from './vocab'
+import { slugify, VOCAB_PRESETS } from './vocab'
 
 /** Direcciones que no puede usar una página porque las usa la app. */
 export const SLUGS_RESERVADOS = ['admin']
@@ -29,20 +29,24 @@ export function urlPublica(slug: string): string {
   return `${location.origin}${location.pathname}#/${slug}`
 }
 
-/** Página nueva en borrador, con el botón de la carta y tres botones de ejemplo ocultos para completar. */
-export async function crearPagina({ name, slug, tipo, plantilla }: { name: string; slug: string; tipo: Site['vocab']['tipo']; plantilla: string }) {
+/**
+ * Página nueva en borrador con los cinco botones de siempre (los de Mia Rooftop): la carta o el catálogo,
+ * reseña, reserva, cómo llegar e Instagram. Los enlaces son de ejemplo: hay que completarlos antes de publicar.
+ */
+export async function crearPagina({ name, slug, tipo, plantilla, paleta }: { name: string; slug: string; tipo: Site['vocab']['tipo']; plantilla: string; paleta?: string }) {
   const vocab = structuredClone(VOCAB_PRESETS[tipo])
   const site = await store.createSite({
     slug, name, description: '', avatar_url: null, published: false,
-    theme: temaDePlantilla(plantilla), vocab, seo_title: null, seo_description: null,
+    theme: temaDePlantilla(plantilla, undefined, paleta), vocab, seo_title: null, seo_description: null,
   })
-  const base = { site_id: site.id, is_active: false } as const
-  const starter: LinkButton[] = [
-    { ...base, id: crypto.randomUUID(), position: 0, label: palabras(vocab).boton, type: 'menu', url: null, icon: iconoSeccion(tipo), is_active: true },
-    { ...base, id: crypto.randomUUID(), position: 1, label: vocab.ejemplos.boton, type: 'url', url: 'https://wa.me/57', icon: 'whatsapp' },
-    { ...base, id: crypto.randomUUID(), position: 2, label: 'Síguenos en Instagram', type: 'url', url: 'https://www.instagram.com/', icon: 'instagram' },
-    { ...base, id: crypto.randomUUID(), position: 3, label: 'Cómo llegar', type: 'url', url: 'https://maps.google.com/', icon: 'map' },
+  const botones: Pick<LinkButton, 'label' | 'type' | 'url' | 'icon'>[] = [
+    { label: tipo === 'tienda' ? 'Nuestro Catálogo' : 'Nuestra Carta', type: 'menu', url: null, icon: iconoSeccion(tipo) },
+    { label: 'Déjanos una reseña!', type: 'url', url: 'https://search.google.com/local/writereview?placeid=', icon: 'star' },
+    { label: 'Haz tu reserva', type: 'url', url: 'https://wa.me/57', icon: 'chat' },
+    { label: 'Cómo llegar', type: 'url', url: 'https://maps.google.com/', icon: 'map' },
+    { label: 'Síguenos en Instagram', type: 'url', url: 'https://www.instagram.com/', icon: 'instagram' },
   ]
+  const starter: LinkButton[] = botones.map((b, position) => ({ ...b, id: crypto.randomUUID(), site_id: site.id, position, is_active: true }))
   await store.insertMany('links', starter)
   return site
 }

@@ -154,7 +154,7 @@ function VocabCard() {
           <span className="w-full text-sm text-gris">Empezar con las palabras de:</span>
           {(['restaurante', 'tienda'] as const).map((tipo) => (
             <Button key={tipo} variant="outline" onClick={() => setDraft({ ...structuredClone(VOCAB_PRESETS[tipo]) })}>
-              {tipo === 'restaurante' ? 'Restaurante (carta, platos)' : 'Tienda (catálogo, productos)'}
+              {tipo === 'restaurante' ? 'Restaurante o bar (carta, opciones)' : 'Tienda (catálogo, productos)'}
             </Button>
           ))}
         </div>
@@ -186,10 +186,10 @@ function VocabCard() {
 
         <div className="grid gap-5 sm:grid-cols-[1fr_1fr_auto]">
           <Field label="Cada producto se llama">
-            <TextInput value={draft.producto.uno} onChange={(e) => set({ producto: { ...draft.producto, uno: e.target.value } })} placeholder="plato" maxLength={20} />
+            <TextInput value={draft.producto.uno} onChange={(e) => set({ producto: { ...draft.producto, uno: e.target.value } })} placeholder="opción" maxLength={20} />
           </Field>
           <Field label="En plural">
-            <TextInput value={draft.producto.varios} onChange={(e) => set({ producto: { ...draft.producto, varios: e.target.value } })} placeholder="platos" maxLength={22} />
+            <TextInput value={draft.producto.varios} onChange={(e) => set({ producto: { ...draft.producto, varios: e.target.value } })} placeholder="opciones" maxLength={22} />
           </Field>
           <Opciones
             legend="Se dice"
@@ -197,8 +197,8 @@ function VocabCard() {
             value={draft.producto.genero}
             onChange={(v) => set({ producto: { ...draft.producto, genero: v } })}
             options={[
-              { value: 'm', label: `el ${draft.producto.uno || 'plato'}` },
-              { value: 'f', label: `la ${draft.producto.uno || 'prenda'}` },
+              { value: 'm', label: `el ${draft.producto.uno || 'producto'}` },
+              { value: 'f', label: `la ${draft.producto.uno || 'opción'}` },
             ]}
           />
         </div>

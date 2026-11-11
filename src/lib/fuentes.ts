@@ -4,7 +4,7 @@
  */
 export interface Fuente {
   nombre: string
-  grupo: 'Serif elegante' | 'Sans moderna' | 'Display' | 'Manuscrita'
+  grupo: 'Serif elegante' | 'Sans moderna' | 'Display'
   pesos: number[]
 }
 
@@ -12,51 +12,29 @@ const rango = (desde: number, hasta: number) => Array.from({ length: (hasta - de
 
 export const FUENTES: Fuente[] = [
   { nombre: 'Cormorant Garamond', grupo: 'Serif elegante', pesos: rango(300, 700) },
-  { nombre: 'Playfair Display', grupo: 'Serif elegante', pesos: rango(400, 900) },
   { nombre: 'Fraunces', grupo: 'Serif elegante', pesos: rango(100, 900) },
-  { nombre: 'DM Serif Display', grupo: 'Serif elegante', pesos: [400] },
-  { nombre: 'Lora', grupo: 'Serif elegante', pesos: rango(400, 700) },
   { nombre: 'Libre Baskerville', grupo: 'Serif elegante', pesos: [400, 700] },
-  { nombre: 'Cinzel', grupo: 'Serif elegante', pesos: rango(400, 900) },
   { nombre: 'Marcellus', grupo: 'Serif elegante', pesos: [400] },
-  { nombre: 'Bodoni Moda', grupo: 'Serif elegante', pesos: rango(400, 900) },
-  { nombre: 'Prata', grupo: 'Serif elegante', pesos: [400] },
 
-  { nombre: 'Onest', grupo: 'Sans moderna', pesos: rango(100, 900) },
-  { nombre: 'Inter', grupo: 'Sans moderna', pesos: rango(100, 900) },
-  { nombre: 'Manrope', grupo: 'Sans moderna', pesos: rango(200, 800) },
   { nombre: 'Outfit', grupo: 'Sans moderna', pesos: rango(100, 900) },
   { nombre: 'DM Sans', grupo: 'Sans moderna', pesos: rango(100, 900) },
-  { nombre: 'Plus Jakarta Sans', grupo: 'Sans moderna', pesos: rango(200, 800) },
-  { nombre: 'Montserrat', grupo: 'Sans moderna', pesos: rango(100, 900) },
-  { nombre: 'Poppins', grupo: 'Sans moderna', pesos: rango(100, 900) },
-  { nombre: 'Nunito', grupo: 'Sans moderna', pesos: rango(200, 900) },
-  { nombre: 'Work Sans', grupo: 'Sans moderna', pesos: rango(100, 900) },
+  { nombre: 'Onest', grupo: 'Sans moderna', pesos: rango(100, 900) },
   { nombre: 'Figtree', grupo: 'Sans moderna', pesos: rango(300, 900) },
 
-  { nombre: 'Bebas Neue', grupo: 'Display', pesos: [400] },
-  { nombre: 'Anton', grupo: 'Display', pesos: [400] },
-  { nombre: 'Oswald', grupo: 'Display', pesos: rango(200, 700) },
-  { nombre: 'Archivo Black', grupo: 'Display', pesos: [400] },
-  { nombre: 'Righteous', grupo: 'Display', pesos: [400] },
-  { nombre: 'Abril Fatface', grupo: 'Display', pesos: [400] },
   { nombre: 'Syne', grupo: 'Display', pesos: rango(400, 800) },
-
-  { nombre: 'Pacifico', grupo: 'Manuscrita', pesos: [400] },
-  { nombre: 'Dancing Script', grupo: 'Manuscrita', pesos: rango(400, 700) },
-  { nombre: 'Caveat', grupo: 'Manuscrita', pesos: rango(400, 700) },
-  { nombre: 'Satisfy', grupo: 'Manuscrita', pesos: [400] },
-  { nombre: 'Lobster', grupo: 'Manuscrita', pesos: [400] },
-  { nombre: 'Great Vibes', grupo: 'Manuscrita', pesos: [400] },
 ]
 
-export const GRUPOS = ['Serif elegante', 'Sans moderna', 'Display', 'Manuscrita'] as const
+export const GRUPOS = ['Serif elegante', 'Sans moderna', 'Display'] as const
+
+/** Nombre de cada grosor, para el panel. */
+export const NOMBRE_PESO: Record<number, string> = {
+  100: 'Ultrafina', 200: 'Extrafina', 300: 'Fina', 400: 'Normal', 500: 'Media', 600: 'Seminegrita', 700: 'Negrita', 800: 'Extranegrita', 900: 'Black',
+}
 
 const RESPALDO: Record<Fuente['grupo'], string> = {
   'Serif elegante': 'Georgia, serif',
   'Sans moderna': 'system-ui, sans-serif',
   Display: 'Impact, system-ui, sans-serif',
-  Manuscrita: 'cursive',
 }
 
 export function fuente(nombre: string): Fuente {

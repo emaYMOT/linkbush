@@ -151,7 +151,7 @@ function LinkForm({ initial, onSave, onClose, onDelete, move }: { initial: Draft
                 type="button"
                 onClick={() => chooseType(type)}
                 aria-pressed={draft.type === type}
-                className={`rounded-2xl border-2 p-3.5 text-left transition ${draft.type === type ? 'border-tinta bg-papel' : 'border-linea hover:border-tinta/30'}`}
+                className={`presion-suave rounded-2xl border-2 p-3.5 text-left ${draft.type === type ? 'border-resalte bg-resalte/10' : 'border-linea hover:border-tinta/30'}`}
               >
                 <Icon size={20} />
                 <span className="mt-2 block font-semibold">{title}</span>

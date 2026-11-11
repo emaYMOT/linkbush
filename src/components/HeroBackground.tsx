@@ -3,7 +3,7 @@ import type { Efecto, Theme } from '../lib/types'
 
 /**
  * Fondo compartido por el inicio y la carta (vive en el layout, así no se reinicia al navegar).
- * Encima del efecto van el póster y el video; luego el tinte y los velos que se ajustan en el panel.
+ * Encima del efecto va el video (el efecto se ve mientras carga); luego el tinte y los velos que se ajustan en el panel.
  * Los colores salen de las variables de la página, así que cambian con su diseño.
  */
 export default function HeroBackground({ theme, dim = false }: { theme: Theme; dim?: boolean }) {
@@ -11,7 +11,6 @@ export default function HeroBackground({ theme, dim = false }: { theme: Theme; d
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-noche" aria-hidden>
       <EfectoFondo tipo={f.efecto} />
-      {f.poster && <img src={f.poster} alt="" className="absolute inset-0 h-full w-full object-cover" />}
       {f.video && <Video key={f.video} src={f.video} />}
       {/* Tinte sobre el video (multiplica: oscurece con el color elegido). */}
       <div className="absolute inset-0 mix-blend-multiply" style={{ background: f.tinte, opacity: f.tinteFuerza / 100 }} />
@@ -48,31 +47,31 @@ function Video({ src }: { src: string }) {
 
 /** Nombre y descripción de cada efecto, para el panel. */
 export const EFECTOS: { value: Efecto; label: string; hint: string }[] = [
+  { value: 'brasas', label: 'Brasas', hint: 'Chispas que suben' },
+  { value: 'luciernagas', label: 'Luciérnagas', hint: 'Lucecitas que vagan y parpadean' },
+  { value: 'polvo', label: 'Polvo de oro', hint: 'Destellos que caen bajo un foco' },
+  { value: 'bengalas', label: 'Bengalas', hint: 'Chispas rápidas desde el centro' },
+  { value: 'burbujas', label: 'Burbujas', hint: 'Burbujas brillantes, como champaña' },
+  { value: 'destellos', label: 'Destellos', hint: 'Reflectores y estrellitas que brillan' },
   { value: 'mar', label: 'Mar', hint: 'Burbujas y rayos de luz' },
   { value: 'luces', label: 'Luces', hint: 'Ladera con luces que titilan' },
   { value: 'estrellas', label: 'Estrellas', hint: 'Cielo estrellado y fugaces' },
-  { value: 'aurora', label: 'Aurora', hint: 'Bandas de color que ondulan' },
-  { value: 'brasas', label: 'Brasas', hint: 'Chispas que suben' },
   { value: 'bokeh', label: 'Bokeh', hint: 'Luces desenfocadas a la deriva' },
-  { value: 'confeti', label: 'Confeti', hint: 'Papelitos que caen' },
-  { value: 'ondas', label: 'Ondas', hint: 'Anillos que se expanden' },
-  { value: 'cuadricula', label: 'Cuadrícula', hint: 'Piso retro que avanza' },
-  { value: 'degradado', label: 'Degradado', hint: 'Manchas de color suaves' },
   { value: 'ninguno', label: 'Ninguno', hint: 'Solo el color de fondo' },
 ]
 
 export function EfectoFondo({ tipo }: { tipo: Efecto }) {
   switch (tipo) {
+    case 'brasas': return <Brasas />
+    case 'luciernagas': return <Luciernagas />
+    case 'polvo': return <Polvo />
+    case 'bengalas': return <Bengalas />
+    case 'burbujas': return <Burbujas />
+    case 'destellos': return <Destellos />
     case 'mar': return <Mar />
     case 'luces': return <Luces />
     case 'estrellas': return <Estrellas />
-    case 'aurora': return <Aurora />
-    case 'brasas': return <Brasas />
     case 'bokeh': return <Bokeh />
-    case 'confeti': return <Confeti />
-    case 'ondas': return <Ondas />
-    case 'cuadricula': return <Cuadricula />
-    case 'degradado': return <Degradado />
     default: return null
   }
 }
@@ -221,26 +220,6 @@ function Estrellas() {
   )
 }
 
-/** Bandas desenfocadas del color de acento que ondulan como una aurora. */
-function Aurora() {
-  const bandas = [
-    { top: '4%', h: '16%', c1: 'var(--color-cobre)', c2: 'var(--color-cobre-2)', d: '9s', delay: '0s' },
-    { top: '15%', h: '12%', c1: 'var(--color-cobre-2)', c2: 'color-mix(in oklab, var(--color-cobre) 40%, var(--color-cal))', d: '11s', delay: '-4s' },
-    { top: '25%', h: '14%', c1: 'color-mix(in oklab, var(--color-cobre) 60%, var(--color-noche-3))', c2: 'var(--color-cobre)', d: '13s', delay: '-8s' },
-  ]
-  return (
-    <div className="absolute inset-0 bg-[linear-gradient(180deg,var(--color-noche-2),var(--color-noche)_70%)]">
-      {bandas.map((b, i) => (
-        <span
-          key={i}
-          className="aurora"
-          style={vars({ top: b.top, left: '-30%', width: '160%', height: b.h, background: `linear-gradient(90deg, transparent, ${b.c1} 30%, ${b.c2} 65%, transparent)`, '--d': b.d, '--delay': b.delay })}
-        />
-      ))}
-    </div>
-  )
-}
-
 /** Chispas que suben desde abajo y se apagan. */
 function Brasas() {
   const chispas = useAzar(5, 56, (rand) => ({ x: rand() * 100, t: 2.5 + rand() * 4.5, d: 6 + rand() * 9, delay: rand() * -15, dx: (rand() - 0.5) * 80 }))
@@ -282,56 +261,81 @@ function Bokeh() {
   )
 }
 
-/** Papelitos de colores que caen girando. */
-function Confeti() {
-  const colores = ['var(--color-cobre)', 'var(--color-cobre-2)', 'var(--color-cal)', 'var(--color-grafiti)']
-  const piezas = useAzar(9, 46, (rand) => ({ x: rand() * 100, t: 6 + rand() * 7, d: 7 + rand() * 9, delay: rand() * -16, g: 1.2 + rand() * 2, dx: (rand() - 0.5) * 60, c: colores[Math.floor(rand() * colores.length)] }))
+/** Lucecitas que vagan por todo el fondo y parpadean, sobre un resplandor que respira. */
+function Luciernagas() {
+  const luces = useAzar(41, 40, (rand) => ({
+    x: rand() * 100, y: 10 + rand() * 85, t: 2.5 + rand() * 3.5, d: 9 + rand() * 10, delay: rand() * -18, p: 2.5 + rand() * 3.5,
+    dx: `${(rand() - 0.5) * 16}%`, dy: `${4 + rand() * 8}%`,
+  }))
   return (
-    <div className="absolute inset-0 bg-[linear-gradient(180deg,var(--color-noche-2),var(--color-noche))]">
-      {piezas.map((p, i) => (
-        <span key={i} className="columna confeti" style={vars({ left: `${p.x}%`, '--t': `${p.t}px`, '--d': `${p.d}s`, '--delay': `${p.delay}s`, '--dx': `${p.dx}px`, '--anim': 'caer-columna' })}>
-          <i style={vars({ background: p.c, opacity: 0.85, '--g': `${p.g}s` })} />
+    <div className="absolute inset-0 bg-[linear-gradient(180deg,var(--color-noche),var(--color-noche-2))]">
+      <div className="respirar absolute -inset-x-[20%] bottom-[-30%] h-[80%] bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--color-cobre)_32%,transparent),transparent)]" />
+      {luces.map((l, i) => (
+        <span key={i} className="capa luciernaga-p" style={vars({ '--d': `${l.d}s`, '--delay': `${l.delay}s`, '--dx': l.dx, '--dy': l.dy })}>
+          <i style={vars({ left: `${l.x}%`, top: `${l.y}%`, '--t': `${l.t}px`, '--p': `${l.p}s` })} />
         </span>
       ))}
     </div>
   )
 }
 
-/** Anillos del color de acento que nacen abajo y se expanden. */
-function Ondas() {
+/** Un foco desde arriba y polvo brillante que cae despacio dentro de su luz. */
+function Polvo() {
+  const motas = useAzar(23, 60, (rand) => ({ x: 8 + rand() * 84, t: 1.5 + rand() * 3, d: 12 + rand() * 14, delay: rand() * -26, dx: (rand() - 0.5) * 60, p: 1.5 + rand() * 2.5 }))
   return (
-    <div className="absolute inset-0 bg-[radial-gradient(70%_45%_at_50%_88%,color-mix(in_oklab,var(--color-cobre)_25%,transparent),transparent_70%),linear-gradient(180deg,var(--color-noche-2),var(--color-noche))]">
-      {[0, -2.5, -5, -7.5].map((delay) => (
-        <span key={delay} className="onda" style={vars({ '--delay': `${delay}s` })} />
+    <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,color-mix(in_oklab,var(--color-cobre)_30%,transparent),transparent_75%),linear-gradient(180deg,var(--color-noche-2),var(--color-noche))]">
+      <div className="foco absolute inset-x-0 top-0 h-full [clip-path:polygon(38%_0,62%_0,95%_100%,5%_100%)] bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-cobre-2)_30%,transparent),transparent_85%)]" />
+      {motas.map((m, i) => (
+        <span key={i} className="columna polvo" style={vars({ left: `${m.x}%`, '--t': `${m.t}px`, '--d': `${m.d}s`, '--delay': `${m.delay}s`, '--dx': `${m.dx}px`, '--anim': 'caer-columna' })}>
+          <i style={vars({ '--p': `${m.p}s` })} />
+        </span>
       ))}
     </div>
   )
 }
 
-/** Piso de cuadrícula que avanza bajo un sol de rayas, estilo retro. */
-function Cuadricula() {
+/** Chispas rápidas que salen en abanico desde un punto de luz abajo, como una bengala. */
+function Bengalas() {
+  const chispas = useAzar(57, 64, (rand) => ({ x: 44 + rand() * 12, t: 1.5 + rand() * 3, d: 2.4 + rand() * 3, delay: rand() * -6, dx: (rand() - 0.5) * 520 }))
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(180deg,var(--color-noche),var(--color-noche-3)_45%,var(--color-noche)_46%)]">
-      {/* Sol de rayas, medio hundido en el horizonte. */}
-      <span
-        className="absolute bottom-[54%] left-1/2 aspect-square w-[min(40%,22rem)] -translate-x-1/2 translate-y-[30%] rounded-full bg-[linear-gradient(180deg,var(--color-cobre-2),var(--color-cobre))] opacity-75 [mask-image:repeating-linear-gradient(180deg,black_0_12%,transparent_12%_15%)]"
-      />
-      <span className="absolute inset-x-0 top-[34%] h-[12%] bg-[radial-gradient(60%_100%_at_50%_100%,color-mix(in_oklab,var(--color-cobre)_45%,transparent),transparent)]" />
-      <div className="horizonte">
-        <span className="absolute inset-0 bg-noche" />
-        <span className="piso" />
-      </div>
+    <div className="absolute inset-0 bg-[linear-gradient(180deg,var(--color-noche),var(--color-noche-2))]">
+      <div className="destello-fuente absolute -inset-x-[10%] bottom-[-25%] h-[70%] bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--color-cobre-2)_55%,transparent),color-mix(in_oklab,var(--color-cobre)_20%,transparent)_45%,transparent)]" />
+      {chispas.map((c, i) => (
+        <span key={i} className="columna bengala" style={vars({ left: `${c.x}%`, '--t': `${c.t}px`, '--d': `${c.d}s`, '--delay': `${c.delay}s`, '--dx': `${c.dx}px`, '--anim': 'subir-columna' })}>
+          <i />
+        </span>
+      ))}
     </div>
   )
 }
 
-/** Dos manchas de luz del color de acento que flotan despacio. */
-function Degradado() {
+/** Burbujas brillantes que suben bamboleándose, como en una copa de champaña. */
+function Burbujas() {
+  const burbujas = useAzar(73, 42, (rand) => ({ x: rand() * 100, t: 4 + rand() * 10, d: 8 + rand() * 10, delay: rand() * -18, dx: (rand() - 0.5) * 40, g: 1.6 + rand() * 2 }))
   return (
-    <>
-      <div className="flotar absolute -inset-[20%] bg-[radial-gradient(45%_38%_at_75%_15%,color-mix(in_oklab,var(--color-cobre)_50%,transparent),transparent_70%)]" style={vars({ '--d': '13s' })} />
-      <div className="flotar absolute -inset-[20%] bg-[radial-gradient(40%_35%_at_20%_85%,color-mix(in_oklab,var(--color-cobre-2)_35%,transparent),transparent_70%)]" style={vars({ '--d': '17s', '--delay': '-6s' })} />
-      <div className="flotar absolute -inset-[20%] bg-[radial-gradient(30%_28%_at_50%_50%,color-mix(in_oklab,var(--color-cobre)_30%,transparent),transparent_70%)]" style={vars({ '--d': '11s', '--delay': '-3s' })} />
-    </>
+    <div className="absolute inset-0 bg-[radial-gradient(80%_50%_at_50%_0%,color-mix(in_oklab,var(--color-cobre)_22%,transparent),transparent_70%),radial-gradient(90%_45%_at_50%_100%,color-mix(in_oklab,var(--color-cobre)_28%,transparent),transparent_70%),linear-gradient(180deg,var(--color-noche-2),var(--color-noche))]">
+      {burbujas.map((b, i) => (
+        <span key={i} className="columna burbuja-luz" style={vars({ left: `${b.x}%`, '--t': `${b.t}px`, '--d': `${b.d}s`, '--delay': `${b.delay}s`, '--dx': `${b.dx}px`, '--anim': 'subir-columna' })}>
+          <i style={vars({ '--g': `${b.g}s` })} />
+        </span>
+      ))}
+    </div>
+  )
+}
+
+/** Reflectores que barren el fondo y estrellitas de cuatro puntas que se encienden y apagan. */
+function Destellos() {
+  const estrellas = useAzar(89, 34, (rand) => ({ x: rand() * 100, y: rand() * 100, t: 5 + rand() * 9, d: 2.5 + rand() * 4, delay: rand() * -7, dx: `${(rand() - 0.5) * 6}%`, dy: `${2 + rand() * 4}%` }))
+  return (
+    <div className="absolute inset-0 bg-[radial-gradient(90%_50%_at_50%_100%,color-mix(in_oklab,var(--color-cobre)_26%,transparent),transparent_70%),linear-gradient(180deg,var(--color-noche),var(--color-noche-2))]">
+      {[{ left: '-10%', d: '9s', delay: '0s' }, { left: '35%', d: '11s', delay: '-4s' }].map((r, i) => (
+        <span key={i} className="reflector" style={vars({ left: r.left, '--d': r.d, '--delay': r.delay })} />
+      ))}
+      {estrellas.map((e, i) => (
+        <span key={i} className="capa" style={vars({ '--d': `${e.d * 3}s`, '--delay': `${e.delay}s`, '--dx': e.dx, '--dy': e.dy })}>
+          <i className="centella" style={vars({ left: `${e.x}%`, top: `${e.y}%`, '--t': `${e.t}px`, '--p': `${e.d}s`, '--delay': `${e.delay}s` })} />
+        </span>
+      ))}
+    </div>
   )
 }

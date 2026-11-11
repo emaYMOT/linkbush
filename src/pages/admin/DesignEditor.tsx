@@ -5,20 +5,36 @@ import Avatar from '../../components/Avatar'
 import { TextInput } from '../../components/Field'
 import { EFECTOS, EfectoFondo } from '../../components/HeroBackground'
 import { iconoSeccion, LinkIcon } from '../../lib/icons'
-import ImageUpload from '../../components/ImageUpload'
 import { Button, ConfirmDialog } from '../../components/Modal'
-import { cargarHoja, fuente, pilaDe, urlFuentes } from '../../lib/fuentes'
-import { PLANTILLAS, temaDePlantilla } from '../../lib/plantillas'
+import { cargarHoja, fuente, NOMBRE_PESO, pesoCercano, pilaDe, urlFuentes } from '../../lib/fuentes'
+import { conTemaColor, PLANTILLAS, temaDePlantilla } from '../../lib/plantillas'
 import { store, VIDEO_MAX_MB } from '../../lib/store'
 import type { AroAvatar, EstiloBoton, FormaBoton, SombraBoton, Theme } from '../../lib/types'
 import { normalizeUrl } from '../../lib/format'
 import type { MensajeVistaPrevia } from '../SiteLayout'
-import { Card, PageTitle } from './AdminApp'
+import { BarraGuardar, Card, PageTitle } from './AdminApp'
 import { useAdminSite } from './contexto'
-import { ColorField, Contraste, FontPicker, Lienzo, Opciones, Rango } from './controles'
-import Muestra from './Muestra'
+import { ColorField, FontPicker, Lienzo, Opciones, Rango } from './controles'
+import Muestra, { SelectorTemasColor } from './Muestra'
 
 const VIDEO_AVISO_MB = 8
+
+const SECCIONES = [
+  ['plantillas', 'Plantillas'],
+  ['temas', 'Temas de color'],
+  ['colores', 'Colores'],
+  ['letras', 'Letras'],
+  ['fondo', 'Fondo'],
+  ['botones', 'Botones'],
+  ['foto', 'Foto de perfil'],
+] as const
+
+/** Las tres letras de la página, cada una con su grosor. */
+const LETRAS = [
+  { clave: 'titulos', peso: 'pesoTitulos', label: 'Títulos', plural: 'los títulos' },
+  { clave: 'textos', peso: 'pesoTextos', label: 'Textos', plural: 'los textos' },
+  { clave: 'precios', peso: 'pesoPrecios', label: 'Precios', plural: 'los precios' },
+] as const
 
 const ESTILOS: { value: EstiloBoton; label: string; hint: string }[] = [
   { value: 'vidrio', label: 'Vidrio', hint: 'Translúcido, desenfoca el video' },
@@ -49,6 +65,9 @@ const AROS: { value: AroAvatar; label: string }[] = [
   { value: 'fino', label: 'Fino' },
   { value: 'doble', label: 'Doble' },
   { value: 'brillo', label: 'Brillo' },
+  { value: 'halo', label: 'Halo' },
+  { value: 'fuego', label: 'Fuego' },
+  { value: 'resplandor', label: 'Resplandor' },
   { value: 'degradado', label: 'Degradado' },
   { value: 'historia', label: 'Historia' },
   { value: 'giratorio', label: 'Giratorio' },
@@ -85,16 +104,17 @@ export default function DesignEditor() {
   const wide = useMedia('(min-width: 1024px)')
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved)
 
-  const setColores = (c: Partial<Theme['colores']>) => setDraft((d) => ({ ...d, colores: { ...d.colores, ...c } }))
+  // Al tocar un color o el tinte a mano, el diseño deja de ser el de un tema de color.
+  const setColores = (c: Partial<Theme['colores']>) => setDraft((d) => ({ ...d, paleta: null, colores: { ...d.colores, ...c } }))
   const setFuentes = (f: Partial<Theme['fuentes']>) => setDraft((d) => ({ ...d, fuentes: { ...d.fuentes, ...f } }))
-  const setFondo = (f: Partial<Theme['fondo']>) => setDraft((d) => ({ ...d, fondo: { ...d.fondo, ...f } }))
+  const setFondo = (f: Partial<Theme['fondo']>) => setDraft((d) => ({ ...d, ...('tinte' in f ? { paleta: null } : {}), fondo: { ...d.fondo, ...f } }))
   const setBotones = (b: Partial<Theme['botones']>) => setDraft((d) => ({ ...d, botones: { ...d.botones, ...b } }))
   const setAvatar = (a: Partial<Theme['avatar']>) => setDraft((d) => ({ ...d, avatar: { ...d.avatar, ...a } }))
 
   // Las tres fuentes elegidas, completas, para las muestras del panel.
   useEffect(() => {
     const f = draft.fuentes
-    cargarHoja(urlFuentes([{ nombre: f.titulos, pesos: [f.pesoTitulos] }, { nombre: f.textos, pesos: [400, 600] }, { nombre: f.precios, pesos: [500] }]))
+    cargarHoja(urlFuentes([{ nombre: f.titulos, pesos: [f.pesoTitulos] }, { nombre: f.textos, pesos: [f.pesoTextos] }, { nombre: f.precios, pesos: [f.pesoPrecios] }]))
   }, [draft.fuentes])
 
   // Avisa antes de cerrar la pestaña del navegador con cambios sin guardar.
@@ -119,34 +139,46 @@ export default function DesignEditor() {
   }
 
   const c = draft.colores
-  const pesos = fuente(draft.fuentes.titulos).pesos.filter((p) => p >= 400 && p <= 800)
   const preview = <VistaPrevia theme={draft} />
 
   return (
     <>
-      <PageTitle title="Diseño" description="Elige una plantilla y ajusta colores, letras, fondo y botones. Los cambios se ven en la vista previa al instante; se publican al guardar." />
+      <PageTitle title="Diseño" />
+
+      {/* Índice: la página es larga, así se llega a cada parte de un toque. */}
+      <nav aria-label="Partes del diseño" className="no-scrollbar -mx-4 mb-5 flex gap-1.5 overflow-x-auto px-4">
+        {SECCIONES.map(([id, label]) => (
+          <a key={id} href={`#${id}`} onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }) }} className="shrink-0 rounded-full border border-linea bg-superficie px-3.5 py-1.5 text-sm font-medium text-gris hover:border-tinta/25 hover:text-tinta">
+            {label}
+          </a>
+        ))}
+      </nav>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="space-y-5">
-          <Card title="Plantillas" description="Un punto de partida: cambia colores, letras, efecto y botones. El video y el póster se conservan.">
+          <Card id="plantillas" title="Plantillas">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {PLANTILLAS.map((p) => (
+              {PLANTILLAS.map((p, i) => (
                 <button
                   key={p.id}
                   type="button"
                   onClick={() => setPlantilla(p.id)}
                   aria-pressed={draft.plantilla === p.id}
+                  aria-label={`Plantilla ${i + 1}: ${p.descripcion}`}
                   title={p.descripcion}
-                  className={`overflow-hidden rounded-2xl border-2 text-left transition ${draft.plantilla === p.id ? 'border-resalte' : 'border-linea hover:border-tinta/30'}`}
+                  className={`presion-suave overflow-hidden rounded-2xl border-2 text-left ${draft.plantilla === p.id ? 'border-resalte ring-2 ring-resalte/30' : 'border-linea hover:border-tinta/30'}`}
                 >
-                  <Muestra compacta theme={temaDePlantilla(p.id)} titulo={site.name} className="aspect-[4/3] px-2! pb-2.5!" />
-                  <span className="block truncate px-2.5 py-1.5 text-sm font-semibold">{p.nombre}</span>
+                  <Muestra compacta theme={temaDePlantilla(p.id, draft)} titulo={site.name} className="aspect-[4/3] px-2! pb-2.5!" />
                 </button>
               ))}
             </div>
           </Card>
 
-          <Card title="Colores" description="Toca la muestra para elegir, o escribe el código del color.">
+          <Card id="temas" title="Temas de color">
+            <SelectorTemasColor value={draft.paleta} onChange={(id) => setDraft((d) => conTemaColor(d, id))} />
+          </Card>
+
+          <Card id="colores" title="Colores">
             <div className="divide-y divide-linea">
               <ColorField label="Fondo" hint="El color de base de toda la página." value={c.fondo} onChange={(v) => setColores({ fondo: v })} />
               <ColorField label="Fondo de tarjetas" hint="Barras y tarjetas de las categorías." value={c.fondo2} onChange={(v) => setColores({ fondo2: v })} />
@@ -157,47 +189,45 @@ export default function DesignEditor() {
               <ColorField label="Texto suave" hint="Descripciones y textos secundarios." value={c.textoSuave} onChange={(v) => setColores({ textoSuave: v })} />
               <ColorField label="Agotado" hint="La etiqueta de agotado." value={c.alerta} onChange={(v) => setColores({ alerta: v })} />
             </div>
-            <h3 className="mt-5 font-semibold">¿Se lee bien?</h3>
-            <ul className="mt-1 divide-y divide-linea">
-              <Contraste label="Texto sobre el fondo" texto={c.texto} fondo={c.fondo} minimo={4.5} />
-              <Contraste label="Texto suave sobre el fondo" texto={c.textoSuave} fondo={c.fondo} minimo={4.5} />
-              <Contraste label="Precios (acento) sobre el fondo" texto={c.acento} fondo={c.fondo} minimo={3} />
-              <Contraste label="Texto sobre el acento (botones y categoría activa)" texto={c.fondo} fondo={c.acento} minimo={4.5} />
-              <Contraste label="Agotado sobre el fondo" texto={c.alerta} fondo={c.fondo} minimo={4.5} />
-            </ul>
           </Card>
 
-          <Card title="Letras" description="Una para títulos, otra para los textos y otra para los precios.">
-            <div className="grid gap-x-4 sm:grid-cols-3">
-              <FontPicker label="Títulos" value={draft.fuentes.titulos} onChange={(v) => setFuentes({ titulos: v })} />
-              <FontPicker label="Textos" value={draft.fuentes.textos} onChange={(v) => setFuentes({ textos: v })} />
-              <FontPicker label="Precios" value={draft.fuentes.precios} onChange={(v) => setFuentes({ precios: v })} />
+          <Card id="letras" title="Letras">
+            <div className="divide-y divide-linea">
+              {LETRAS.map(({ clave, peso, label, plural }) => {
+                const nombre = draft.fuentes[clave]
+                const pesos = fuente(nombre).pesos.filter((p) => p >= 300 && p <= 800)
+                return (
+                  <div key={clave} className="py-3 first:pt-0 last:pb-0">
+                    <FontPicker
+                      label={label}
+                      value={nombre}
+                      // Al cambiar de letra, el grosor pasa al más parecido que esa letra tenga.
+                      onChange={(v) => setFuentes({ [clave]: v, [peso]: pesoCercano(v, draft.fuentes[peso]) })}
+                    />
+                    {pesos.length > 1 ? (
+                      <Opciones
+                        legend={`Grosor de ${plural}`}
+                        columns={3}
+                        value={pesoCercano(nombre, draft.fuentes[peso])}
+                        onChange={(v) => setFuentes({ [peso]: v })}
+                        options={pesos.map((p) => ({ value: p, label: NOMBRE_PESO[p] ?? String(p) }))}
+                      />
+                    ) : (
+                      <p className="text-sm text-gris">{nombre} tiene un solo grosor.</p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-            {pesos.length > 1 && (
-              <div className="mt-4">
-                <Opciones
-                  legend="Grosor de los títulos"
-                  columns={4}
-                  value={pesos.includes(draft.fuentes.pesoTitulos) ? draft.fuentes.pesoTitulos : pesos[0]}
-                  onChange={(v) => setFuentes({ pesoTitulos: v })}
-                  options={pesos.map((p) => ({ value: p, label: { 400: 'Normal', 500: 'Medio', 600: 'Seminegrita', 700: 'Negrita', 800: 'Extra' }[p] ?? String(p) }))}
-                />
-              </div>
-            )}
             <div className="mt-5 rounded-2xl p-5" style={{ background: c.fondo, color: c.texto }}>
-              <p className="text-[2rem] leading-tight" style={{ fontFamily: pilaDe(draft.fuentes.titulos), fontWeight: draft.fuentes.pesoTitulos }}>{site.name}</p>
-              <p className="mt-2" style={{ fontFamily: pilaDe(draft.fuentes.textos), color: c.textoSuave }}>Así se leen las descripciones de cada producto, con su letra.</p>
-              <p className="mt-2 text-[1.35rem]" style={{ fontFamily: pilaDe(draft.fuentes.precios), color: c.acento, fontWeight: 500 }}>$25.000</p>
+              <p className="text-[2rem] leading-tight" style={{ fontFamily: pilaDe(draft.fuentes.titulos), fontWeight: pesoCercano(draft.fuentes.titulos, draft.fuentes.pesoTitulos) }}>{site.name}</p>
+              <p className="mt-2" style={{ fontFamily: pilaDe(draft.fuentes.textos), color: c.textoSuave, fontWeight: pesoCercano(draft.fuentes.textos, draft.fuentes.pesoTextos) }}>Así se leen las descripciones de cada producto, con su letra.</p>
+              <p className="mt-2 text-[1.35rem]" style={{ fontFamily: pilaDe(draft.fuentes.precios), color: c.acento, fontWeight: pesoCercano(draft.fuentes.precios, draft.fuentes.pesoPrecios) }}>$25.000</p>
             </div>
           </Card>
 
-          <Card title="Fondo" description="Un video que se repite detrás del inicio y de la carta. Mientras carga (o si no hay), se ve el póster o el efecto.">
-            <VideoField value={draft.fondo.video} onChange={(video, poster) => setFondo(poster === undefined ? { video } : { video, poster })} />
-            <div className="mt-5">
-              <span className="mb-1.5 block font-medium">Póster (imagen de espera)</span>
-              <ImageUpload wide siteId={site.id} folder="poster" value={draft.fondo.poster} onChange={(url) => setFondo({ poster: url })} />
-              <span className="mt-1.5 block text-sm text-gris">Se crea solo al subir un video. Sin video, sirve como foto de fondo fija.</span>
-            </div>
+          <Card id="fondo" title="Fondo">
+            <VideoField value={draft.fondo.video} onChange={(video) => setFondo({ video })} />
             <div className="mt-5">
               <Opciones
                 legend="Efecto de fondo"
@@ -207,7 +237,7 @@ export default function DesignEditor() {
                 options={EFECTOS.map((e) => ({
                   ...e,
                   preview: (
-                    <Lienzo theme={draft} className="mb-2 aspect-[4/3] rounded-xl">
+                    <Lienzo theme={draft} className="muestra-viva mb-2 aspect-[4/3] rounded-xl">
                       <EfectoFondo tipo={e.value} />
                     </Lienzo>
                   ),
@@ -222,7 +252,7 @@ export default function DesignEditor() {
             </div>
           </Card>
 
-          <Card title="Botones del inicio" description="Cada opción se ve con los colores de la página. Arriba, cómo quedan juntos.">
+          <Card id="botones" title="Botones del inicio">
             <Lienzo theme={draft} className="rounded-2xl px-5 py-6">
               <EfectoFondo tipo={draft.fondo.efecto} />
               <div className="relative mx-auto flex max-w-sm flex-col gap-3">
@@ -290,7 +320,7 @@ export default function DesignEditor() {
             </div>
           </Card>
 
-          <Card title="Foto de perfil" description="El aro que la rodea y su forma. «Sin aro» la deja limpia, sin borde.">
+          <Card id="foto" title="Foto de perfil">
             <div className="space-y-5">
               <Opciones
                 legend="Aro"
@@ -300,7 +330,7 @@ export default function DesignEditor() {
                 options={AROS.map((a) => ({
                   ...a,
                   preview: (
-                    <Lienzo theme={draft} className="mb-2 grid place-items-center rounded-xl py-5">
+                    <Lienzo theme={draft} className="muestra-viva mb-2 grid place-items-center rounded-xl py-5">
                       <Avatar src={site.avatar_url} name={site.name} size={64} avatar={{ ...draft.avatar, aro: a.value }} />
                     </Lienzo>
                   ),
@@ -319,17 +349,17 @@ export default function DesignEditor() {
             </div>
           </Card>
 
-          <div className="sticky bottom-0 z-10 -mx-4 flex items-center justify-end gap-2 border-t border-linea bg-papel/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
-            {dirty ? <span className="mr-auto text-sm text-gris">Cambios sin guardar</span> : <span className="mr-auto text-sm text-gris">Todo guardado</span>}
-            {!wide && (
-              <Button variant="outline" onClick={() => setPreviewOpen(true)}><Eye size={18} /> Vista previa</Button>
-            )}
-            {dirty && <Button variant="ghost" onClick={() => setDraft(saved)}>Descartar</Button>}
-            <Button onClick={save} busy={busy} disabled={!dirty}>Guardar diseño</Button>
-          </div>
+          <BarraGuardar
+            dirty={dirty}
+            busy={busy}
+            onSave={save}
+            onDiscard={() => setDraft(saved)}
+            label="Guardar diseño"
+            extra={!wide && <Button variant="outline" onClick={() => setPreviewOpen(true)} aria-label="Vista previa"><Eye size={18} /> <span className="hidden sm:inline">Vista previa</span></Button>}
+          />
         </div>
 
-        {wide && <aside className="sticky top-6" aria-label="Vista previa">{preview}</aside>}
+        {wide && <aside className="sticky top-[9.5rem]" aria-label="Vista previa">{preview}</aside>}
       </div>
 
       {!wide && previewOpen && (
@@ -345,8 +375,8 @@ export default function DesignEditor() {
 
       <ConfirmDialog
         open={!!plantilla}
-        title={`¿Usar la plantilla ${PLANTILLAS.find((p) => p.id === plantilla)?.nombre ?? ''}?`}
-        message="Se reemplazan los colores, las letras, el efecto y los botones. El video y el póster se conservan. Lo puedes ajustar todo después; nada se publica hasta que guardes."
+        title="¿Usar esta plantilla?"
+        message="Se reemplazan las letras, el efecto de fondo, los botones y el aro de la foto. Tus colores y el video se conservan. Lo puedes ajustar todo después; nada se publica hasta que guardes."
         confirmLabel="Usar plantilla"
         onClose={() => setPlantilla(null)}
         onConfirm={() => {
@@ -397,13 +427,12 @@ function VistaPrevia({ theme }: { theme: Theme }) {
       <div className="h-full max-h-[760px] min-h-[520px] w-full max-w-[380px] overflow-hidden rounded-[2.2rem] border-[6px] border-[#16181c] bg-black shadow-2xl lg:h-[min(760px,calc(100dvh-9rem))]">
         <iframe key={src} ref={frame} src={src} title={`Vista previa de ${site.name}`} className="h-full w-full" />
       </div>
-      <p className="max-w-[380px] text-center text-xs text-gris">Puedes navegar dentro de la vista previa. Muestra el contenido guardado con el diseño que estás editando.</p>
     </div>
   )
 }
 
 /** Subir un video (con póster automático), pegar un enlace o quitarlo. */
-function VideoField({ value, onChange }: { value: string | null; onChange: (video: string | null, poster?: string | null) => void }) {
+function VideoField({ value, onChange }: { value: string | null; onChange: (video: string | null) => void }) {
   const { site } = useAdminSite()
   const input = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState('')
@@ -420,10 +449,7 @@ function VideoField({ value, onChange }: { value: string | null; onChange: (vide
     try {
       setBusy('Subiendo video…')
       const video = await store.uploadVideo(file, site.id)
-      setBusy('Creando póster…')
-      const frame = await capturarPoster(file)
-      const poster = frame ? await store.uploadImage(frame, site.id, 'poster') : undefined
-      onChange(video, poster)
+      onChange(video)
       toast.success('Video listo. Guarda el diseño para publicarlo.')
     } catch (e) {
       toast.error((e as Error).message)
@@ -444,7 +470,7 @@ function VideoField({ value, onChange }: { value: string | null; onChange: (vide
           </button>
         </div>
       ) : (
-        <p className="rounded-2xl border-2 border-dashed border-linea px-4 py-4 text-sm text-gris">Sin video: se ve el póster o el efecto de fondo.</p>
+        <p className="rounded-2xl border-2 border-dashed border-linea px-4 py-4 text-sm text-gris">Sin video: se ve el efecto de fondo.</p>
       )}
       <div className="mt-2 flex flex-wrap gap-2">
         <Button variant="outline" onClick={() => input.current?.click()} busy={!!busy} busyLabel={busy}><Film size={18} /> {value ? 'Cambiar video' : 'Subir video'}</Button>
@@ -469,35 +495,6 @@ function VideoField({ value, onChange }: { value: string | null; onChange: (vide
       <input ref={input} type="file" accept="video/mp4,video/webm" hidden onChange={(e) => pick(e.target.files?.[0])} />
     </div>
   )
-}
-
-/** Toma un cuadro del video (a 1 s) para usarlo como póster mientras carga. */
-async function capturarPoster(file: File): Promise<File | null> {
-  const url = URL.createObjectURL(file)
-  try {
-    const video = document.createElement('video')
-    video.muted = true
-    video.playsInline = true
-    video.preload = 'auto'
-    video.src = url
-    await new Promise((resolve, reject) => {
-      video.onloadeddata = resolve
-      video.onerror = reject
-    })
-    video.currentTime = Math.min(1, (video.duration || 0) / 10)
-    await new Promise((resolve) => (video.onseeked = resolve))
-    const scale = Math.min(1, 1280 / Math.max(video.videoWidth, video.videoHeight))
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.round(video.videoWidth * scale)
-    canvas.height = Math.round(video.videoHeight * scale)
-    canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height)
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82))
-    return blob ? new File([blob], 'poster.webp', { type: 'image/webp' }) : null
-  } catch {
-    return null
-  } finally {
-    URL.revokeObjectURL(url)
-  }
 }
 
 function useMedia(query: string) {

@@ -28,7 +28,6 @@ async function rutasEnUso(excluir?: string): Promise<Set<string>> {
   for (const s of sites) {
     add(s.avatar_url)
     add(s.theme.fondo.video)
-    add(s.theme.fondo.poster)
     const [categorias, productos] = await Promise.all([store.list('menu_categories', s.id), store.list('menu_items', s.id)])
     categorias.forEach((c) => add(c.image_url))
     productos.forEach((p) => add(p.image_url))

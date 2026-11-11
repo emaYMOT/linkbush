@@ -2,8 +2,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { Field, TextArea, TextInput } from '../../components/Field'
 import ImageUpload from '../../components/ImageUpload'
-import { Button } from '../../components/Modal'
-import { Card, PageTitle } from './AdminApp'
+import { BarraGuardar, Card, PageTitle } from './AdminApp'
 import { useAdminSite } from './contexto'
 
 export default function ProfileEditor() {
@@ -65,10 +64,7 @@ export default function ProfileEditor() {
           </div>
         </Card>
 
-        <div className="flex items-center justify-end gap-3">
-          {dirty && <span className="text-sm text-gris">Tienes cambios sin guardar</span>}
-          <Button onClick={submit} busy={busy} disabled={!dirty}>Guardar perfil</Button>
-        </div>
+        <BarraGuardar dirty={dirty} busy={busy} onSave={submit} onDiscard={() => setDraft(saved)} label="Guardar perfil" />
       </div>
     </>
   )

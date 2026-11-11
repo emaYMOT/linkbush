@@ -2,7 +2,7 @@ import { Check, ChevronDown } from 'lucide-react'
 import { useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react'
 import Modal from '../../components/Modal'
 import { cargarHoja, FUENTES, GRUPOS, pilaDe, urlMuestras } from '../../lib/fuentes'
-import { contraste, normalizarHex, variablesDe } from '../../lib/tema'
+import { normalizarHex, variablesDe } from '../../lib/tema'
 import type { Theme } from '../../lib/types'
 
 /**
@@ -56,23 +56,6 @@ export function ColorField({ label, hint, value, onChange }: { label: string; hi
   )
 }
 
-/** Aviso de legibilidad de un par de colores (WCAG: 4.5 para texto normal, 3 para texto grande). */
-export function Contraste({ label, texto, fondo, minimo }: { label: string; texto: string; fondo: string; minimo: 3 | 4.5 }) {
-  const ratio = contraste(texto, fondo)
-  const ok = ratio >= minimo
-  return (
-    <li className="flex items-center gap-3 py-2">
-      <span className="grid h-9 w-12 shrink-0 place-items-center rounded-lg border border-linea text-sm font-bold" style={{ background: fondo, color: texto }}>
-        Aa
-      </span>
-      <span className="min-w-0 flex-1 text-sm">{label}</span>
-      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${ok ? 'bg-exito/12 text-exito' : 'bg-peligro/12 text-peligro'}`}>
-        {ok ? 'Se lee bien' : 'Poco contraste'} · {ratio.toFixed(1)}:1
-      </span>
-    </li>
-  )
-}
-
 /** Botones de opción única (como radios, pero grandes y tocables). */
 export function Opciones<T extends string | number>({ legend, value, onChange, options, columns = 3 }: {
   legend: string
@@ -84,7 +67,7 @@ export function Opciones<T extends string | number>({ legend, value, onChange, o
   const cols = { 2: 'grid-cols-2', 3: 'grid-cols-2 sm:grid-cols-3', 4: 'grid-cols-2 sm:grid-cols-4' }[columns]
   return (
     <fieldset>
-      <legend className="mb-2 font-medium">{legend}</legend>
+      <legend className="mb-2 text-[0.95rem] font-medium">{legend}</legend>
       <div className={`grid gap-2 ${cols}`}>
         {options.map((o) => (
           <button
@@ -92,7 +75,7 @@ export function Opciones<T extends string | number>({ legend, value, onChange, o
             type="button"
             aria-pressed={value === o.value}
             onClick={() => onChange(o.value)}
-            className={`relative rounded-2xl border-2 p-3 text-left transition ${value === o.value ? 'border-resalte bg-resalte/10' : 'border-linea hover:border-tinta/30'}`}
+            className={`relative rounded-2xl border p-3 text-left ${value === o.value ? 'border-resalte bg-resalte/8 ring-2 ring-resalte/25' : 'border-linea hover:border-tinta/25 hover:bg-papel/50'}`}
           >
             {o.preview}
             <span className="block font-semibold">{o.label}</span>
@@ -133,7 +116,7 @@ export function FontPicker({ label, value, onChange }: { label: string; value: s
         type="button"
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
-        className="flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-linea bg-superficie px-4 text-left transition hover:border-tinta/40"
+        className="sombra-panel flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-linea bg-superficie px-4 text-left hover:border-tinta/25"
       >
         <span className="truncate text-lg" style={{ fontFamily: pilaDe(value) }}>{value}</span>
         <ChevronDown size={18} className="shrink-0 text-gris" aria-hidden />

@@ -38,7 +38,7 @@ export default function ImageUpload({ value, onChange, siteId, folder, round, wi
       <button
         type="button"
         onClick={() => input.current?.click()}
-        className={`${shape} relative grid shrink-0 place-items-center overflow-hidden border-2 border-dashed border-linea bg-papel text-gris transition hover:border-tinta/40`}
+        className={`${shape} presion-suave relative grid shrink-0 place-items-center overflow-hidden border-2 border-dashed border-linea bg-papel text-gris hover:border-resalte/50 hover:text-resalte ${value ? 'border-solid' : ''}`}
       >
         {value ? (
           <img src={value} alt="" className="absolute inset-0 h-full w-full object-cover" />

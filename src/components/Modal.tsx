@@ -39,20 +39,22 @@ export default function Modal({ open, title, onClose, children, footer, dirty, w
         else requestClose()
       }}
       onClick={(e) => e.target === dialog.current && requestClose()}
-      className={`modal m-0 mt-auto max-h-[92dvh] w-full max-w-none rounded-t-3xl bg-superficie p-0 text-tinta shadow-2xl backdrop:bg-black/60 sm:m-auto sm:rounded-3xl ${wide ? 'sm:max-w-2xl' : 'sm:max-w-lg'}`}
+      className={`modal m-0 mt-auto max-h-[92dvh] w-full max-w-none rounded-t-[1.75rem] border border-linea bg-superficie p-0 text-tinta shadow-2xl backdrop:bg-black/55 backdrop:backdrop-blur-[2px] sm:m-auto sm:rounded-3xl ${wide ? 'sm:max-w-2xl' : 'sm:max-w-lg'}`}
     >
       {open && (
         <CloseContext.Provider value={requestClose}>
           <div className="relative flex max-h-[92dvh] flex-col">
-            <header className="flex items-center justify-between gap-4 border-b border-linea py-3 pr-3 pl-6">
-              <h2 id="modal-titulo" className="font-ui-display text-2xl">{title}</h2>
-              <button type="button" onClick={requestClose} className="grid size-11 place-items-center rounded-full text-gris transition-colors hover:bg-papel hover:text-tinta" aria-label="Cerrar">
-                <X size={20} aria-hidden />
+            {/* Asa de la hoja en celular: indica que es una hoja que se puede cerrar. */}
+            <span aria-hidden className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-linea sm:hidden" />
+            <header className="flex items-center justify-between gap-4 py-2.5 pr-3 pl-6 sm:pt-4">
+              <h2 id="modal-titulo" className="font-ui-display text-[1.45rem] leading-tight">{title}</h2>
+              <button type="button" onClick={requestClose} className="grid size-10 place-items-center rounded-full bg-papel text-gris hover:text-tinta" aria-label="Cerrar">
+                <X size={18} aria-hidden />
               </button>
             </header>
-            <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
+            <div className="flex-1 overflow-y-auto overscroll-contain px-6 pt-2 pb-5">{children}</div>
             {footer && (
-              <footer className="flex flex-col-reverse gap-2 border-t border-linea px-6 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end">
+              <footer className="flex flex-col-reverse gap-2 border-t border-linea bg-papel/40 px-6 pt-3.5 pb-[max(.875rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end">
                 {footer}
               </footer>
             )}
@@ -111,19 +113,27 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primar
 
 export function Button({ variant = 'primary', busy, busyLabel = 'Guardando…', className = '', children, disabled, ...rest }: ButtonProps) {
   const styles = {
-    primary: 'bg-tinta text-superficie hover:bg-tinta/85',
-    outline: 'border border-linea bg-superficie text-tinta hover:border-tinta/40',
+    primary: 'bg-tinta text-superficie shadow-[0_1px_2px_rgb(0_0_0/.12),inset_0_1px_0_rgb(255_255_255/.08)] hover:bg-tinta/88',
+    outline: 'border border-linea bg-superficie text-tinta sombra-panel hover:border-tinta/30 hover:bg-papel/60',
     ghost: 'text-tinta hover:bg-papel',
-    danger: 'bg-peligro text-superficie hover:bg-peligro/90',
+    danger: 'bg-peligro text-white hover:bg-peligro/90',
   }[variant]
   return (
     <button
       type="button"
       disabled={disabled || busy}
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 font-semibold transition disabled:opacity-50 ${styles} ${className}`}
+      aria-busy={busy || undefined}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4.5 text-[0.95rem] font-semibold disabled:opacity-45 ${styles} ${className}`}
       {...rest}
     >
-      {busy ? busyLabel : children}
+      {busy ? (
+        <>
+          <span aria-hidden className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent [animation-duration:600ms]" />
+          {busyLabel}
+        </>
+      ) : (
+        children
+      )}
     </button>
   )
 }

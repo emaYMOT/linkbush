@@ -1,4 +1,3 @@
-import QRCode from 'qrcode'
 import { Download } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -19,8 +18,11 @@ export function QrDialog({ site, onClose }: { site: Site; onClose: () => void })
   const [svg, setSvg] = useState('')
 
   useEffect(() => {
-    QRCode.toDataURL(url, { width: 1024, margin: 2, errorCorrectionLevel: 'M' }).then(setPng)
-    QRCode.toString(url, { type: 'svg', margin: 2, errorCorrectionLevel: 'M' }).then((s) => setSvg(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}`))
+    // La librería del QR solo se descarga al abrir esta ventana.
+    import('qrcode').then(({ default: QRCode }) => {
+      QRCode.toDataURL(url, { width: 1024, margin: 2, errorCorrectionLevel: 'M' }).then(setPng)
+      QRCode.toString(url, { type: 'svg', margin: 2, errorCorrectionLevel: 'M' }).then((s) => setSvg(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}`))
+    })
   }, [url])
 
   return (

@@ -1,5 +1,4 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import imageCompression from 'browser-image-compression'
 import { bySort } from './format'
 import { demoSeed } from './seed'
 import { completarTema } from './tema'
@@ -14,7 +13,7 @@ export type RowOf<C extends Collection> = C extends 'links'
       ? Subcategory
       : MenuItem
 
-export type ImageFolder = 'avatar' | 'items' | 'categories' | 'poster'
+export type ImageFolder = 'avatar' | 'items' | 'categories'
 export type NewSite = Omit<Site, 'id' | 'created_at' | 'updated_at'>
 
 const MAX_SIDE: Record<ImageFolder, [number, number]> = {
@@ -22,7 +21,6 @@ const MAX_SIDE: Record<ImageFolder, [number, number]> = {
   avatar: [600, 400],
   items: [1200, 800],
   categories: [1600, 1000],
-  poster: [1280, 720],
 }
 
 /** Máximo que acepta el almacenamiento (igual que en schema.sql). */
@@ -68,7 +66,11 @@ export interface DataStore {
   signOut(): Promise<void>
 }
 
+// La librería de compresión solo se descarga al subir la primera foto (la página pública nunca la necesita).
+const compresor = () => import('browser-image-compression').then((m) => m.default)
+
 async function compress(file: File, maxSide: number): Promise<File> {
+  const imageCompression = await compresor()
   return imageCompression(file, { maxSizeMB: 0.35, maxWidthOrHeight: maxSide, fileType: 'image/webp', useWebWorker: true })
 }
 
@@ -178,6 +180,7 @@ function supabaseStore(client: SupabaseClient): DataStore {
     async listFiles(siteId) {
       const bucket = client.storage.from('media')
       const out: StoredFile[] = []
+      // 'poster' ya no se usa: se sigue listando para que la limpieza borre los que quedaron.
       for (const folder of ['avatar', 'items', 'categories', 'poster', 'video']) {
         const { data, error } = await bucket.list(`${siteId}/${folder}`, { limit: 1000 })
         fail(error)
@@ -366,7 +369,7 @@ function demoStore(): DataStore {
 
     async uploadImage(file, _siteId, folder) {
       const small = await compress(file, MAX_SIDE[folder][1])
-      return imageCompression.getDataUrlFromFile(small)
+      return (await compresor()).getDataUrlFromFile(small)
     },
 
     async uploadVideo() {

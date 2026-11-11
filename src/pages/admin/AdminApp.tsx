@@ -1,4 +1,5 @@
-import { LogOut, Monitor, Moon, Sun } from 'lucide-react'
+import { LogOut, Monitor, Moon, Shrub, Sun } from 'lucide-react'
+import { Button } from '../../components/Modal'
 import { useCallback, useEffect, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
@@ -49,7 +50,7 @@ export default function AdminApp() {
       <Toaster
         position="top-center"
         toastOptions={{
-          style: { borderRadius: '14px', fontWeight: 500, background: 'var(--color-superficie)', color: 'var(--color-tinta)', border: '1px solid var(--color-linea)' },
+          style: { borderRadius: '14px', fontWeight: 500, fontSize: '0.95rem', padding: '10px 14px', background: 'var(--color-superficie)', color: 'var(--color-tinta)', border: '1px solid var(--color-linea)', boxShadow: '0 12px 32px -12px rgb(16 24 40 / .25)' },
           duration: 3500,
           success: { duration: 3000 },
           error: { duration: 5000 },
@@ -59,24 +60,23 @@ export default function AdminApp() {
         <Login onSignedIn={setSession} />
       ) : (
         <AdminProvider value={{ sites, setSites: (update) => setSitesState((list) => (list ? update(list) : list)), reloadSites }}>
-          <header className="sticky top-0 z-20 border-b border-linea bg-superficie/95 pt-[env(safe-area-inset-top)] backdrop-blur">
-            <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5">
-              <Link to="/admin" className="-ml-2 flex-1 rounded-xl px-2 py-1">
-                <span className="block font-ui-display text-[1.35rem] leading-none">Link Bush</span>
-                <span className="block text-xs text-gris">Panel de administración</span>
+          <header className="sticky top-0 z-30 border-b border-linea bg-superficie/90 pt-[env(safe-area-inset-top)] backdrop-blur-md backdrop-saturate-150">
+            <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
+              <Link to="/admin" className="sin-presion -ml-1.5 flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1.5 py-1" aria-label="Link Bush: Mis páginas">
+                <Marca />
+                <span className="font-ui-display text-[1.2rem] leading-none whitespace-nowrap">Link Bush</span>
+                {store.mode === 'demo' && <span className="rounded-full bg-resalte/12 px-2 py-0.5 text-[0.7rem] font-semibold tracking-wide text-resalte uppercase">Demo</span>}
               </Link>
               <SelectorModo />
-              <button type="button" onClick={signOut} aria-label="Cerrar sesión" title="Cerrar sesión" className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-gris transition-colors hover:bg-papel hover:text-tinta">
+              <button type="button" onClick={signOut} aria-label="Cerrar sesión" title="Cerrar sesión" className="inline-flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-xl px-2.5 text-sm font-semibold text-gris hover:bg-papel hover:text-tinta">
                 <LogOut size={17} /> <span className="hidden sm:inline">Salir</span>
               </button>
             </div>
           </header>
 
           {store.mode === 'demo' && (
-            <p className="mx-auto mt-4 max-w-6xl px-4">
-              <span className="block rounded-xl bg-resalte/12 px-4 py-3 text-sm">
-                <strong>Modo demo.</strong> Los cambios se guardan solo en este navegador. Cuando conectes Supabase se publicarán para todos.
-              </span>
+            <p className="mx-auto mt-4 max-w-6xl px-4 text-sm text-gris">
+              <strong className="text-tinta">Modo demo.</strong> Los cambios se guardan solo en este navegador. Cuando conectes Supabase se publicarán para todos.
             </p>
           )}
 
@@ -101,7 +101,7 @@ const MODOS: [ModoPanel, string, typeof Sun][] = [
 function SelectorModo() {
   const [modo, setModo] = useModoPanel()
   return (
-    <div role="group" aria-label="Modo del panel" className="flex rounded-xl border border-linea p-0.5">
+    <div role="group" aria-label="Modo del panel" className="flex rounded-xl bg-papel p-0.5">
       {MODOS.map(([value, label, Icon]) => (
         <button
           key={value}
@@ -110,38 +110,78 @@ function SelectorModo() {
           aria-label={label}
           title={label}
           onClick={() => setModo(value)}
-          className={`grid size-10 place-items-center rounded-[10px] transition-colors ${modo === value ? 'bg-tinta text-superficie' : 'text-gris hover:text-tinta'}`}
+          className={`grid size-9 place-items-center rounded-[10px] ${modo === value ? 'sombra-panel bg-superficie text-tinta' : 'text-gris hover:text-tinta'}`}
         >
-          <Icon size={17} aria-hidden />
+          <Icon size={16} aria-hidden />
         </button>
       ))}
     </div>
   )
 }
 
+/** El símbolo de Link Bush: un arbusto, en blanco y negro (se invierte en modo oscuro). */
+export function Marca({ size = 30 }: { size?: number }) {
+  return (
+    <span aria-hidden className="grid shrink-0 place-items-center rounded-[9px] bg-tinta text-superficie" style={{ width: size, height: size }}>
+      <Shrub size={size * 0.6} strokeWidth={2} />
+    </span>
+  )
+}
+
 export function PageTitle({ title, description, action }: { title: string; description?: string; action?: React.ReactNode }) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="font-ui-display text-[2rem] leading-tight">{title}</h1>
-        {description && <p className="mt-1.5 max-w-[52ch] text-gris">{description}</p>}
+      <div className="min-w-0">
+        <h1 className="font-ui-display text-[1.85rem] leading-[1.1] tracking-[-0.015em] sm:text-[2.1rem]">{title}</h1>
+        {description && <p className="mt-2 max-w-[56ch] text-[0.95rem] leading-relaxed text-gris">{description}</p>}
       </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  )
+}
+
+export function EmptyState({ icon, children, action }: { icon?: React.ReactNode; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-linea bg-superficie/50 px-6 py-12 text-center text-gris">
+      {icon && <span className="grid size-12 place-items-center rounded-2xl bg-papel text-tinta">{icon}</span>}
+      <div className="max-w-[42ch]">{children}</div>
       {action}
     </div>
   )
 }
 
-export function EmptyState({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-2xl border-2 border-dashed border-linea px-6 py-10 text-center text-gris">{children}</div>
-}
-
-/** Tarjeta blanca (o carbón en modo oscuro) de los formularios del panel. */
-export function Card({ title, description, children }: { title?: string; description?: string; children: React.ReactNode }) {
+/** Tarjeta de los formularios del panel. Con `id`, se puede saltar a ella desde un índice. */
+export function Card({ title, description, children, id, aside }: { title?: string; description?: string; children: React.ReactNode; id?: string; aside?: React.ReactNode }) {
   return (
-    <section className="rounded-3xl border border-linea bg-superficie p-5 sm:p-7">
-      {title && <h2 className="font-ui-display text-[1.45rem] leading-tight">{title}</h2>}
-      {description && <p className="mt-1 text-sm text-gris">{description}</p>}
+    <section id={id} className="sombra-panel rounded-[1.4rem] border border-linea bg-superficie p-5 sm:p-6">
+      {(title || aside) && (
+        <div className="flex items-start justify-between gap-3">
+          {title && <h2 className="font-ui-display text-[1.3rem] leading-tight tracking-[-0.01em]">{title}</h2>}
+          {aside}
+        </div>
+      )}
+      {description && <p className="mt-1 max-w-[60ch] text-sm leading-relaxed text-gris">{description}</p>}
       <div className={title || description ? 'mt-5' : ''}>{children}</div>
     </section>
+  )
+}
+
+/**
+ * Barra de guardar que queda pegada abajo mientras hay algo por guardar.
+ * Dice siempre en qué estado está el formulario, para que nadie se vaya sin guardar.
+ */
+export function BarraGuardar({ dirty, busy, onSave, onDiscard, label, extra }: { dirty: boolean; busy: boolean; onSave: () => void; onDiscard?: () => void; label: string; extra?: React.ReactNode }) {
+  return (
+    <div className="sticky bottom-0 z-20 -mx-4 mt-2 px-4 pt-2 pb-[max(.75rem,env(safe-area-inset-bottom))] sm:mx-0 sm:px-0">
+      <div className={`flex items-center gap-2 rounded-2xl border bg-superficie/95 p-2 pl-4 backdrop-blur-md ${dirty ? 'sombra-flotante border-resalte/30' : 'sombra-panel border-linea'}`}>
+        <span className="mr-auto flex items-center gap-2 text-sm text-gris" aria-live="polite">
+          <span aria-hidden className={`size-2 rounded-full ${dirty ? 'bg-resalte' : 'bg-exito'}`} />
+          {dirty ? 'Cambios sin guardar' : 'Todo guardado'}
+        </span>
+        {extra}
+        {dirty && onDiscard && <Button variant="ghost" onClick={onDiscard}>Descartar</Button>}
+        <Button onClick={onSave} busy={busy} disabled={!dirty}>{label}</Button>
+      </div>
+    </div>
   )
 }
