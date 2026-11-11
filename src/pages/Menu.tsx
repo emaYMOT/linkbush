@@ -1,37 +1,63 @@
 import { ArrowRight, ChevronLeft } from 'lucide-react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import CategoryCover from '../components/CategoryCover'
-import { useSite } from '../lib/sitio'
+import { useCartaActual, useSite } from '../lib/sitio'
 import { loadPublicMenu } from '../lib/store'
 import { useCached } from '../lib/useCached'
 import { useRouteFocus } from '../lib/useRouteFocus'
 
 export default function Menu() {
-  const { site, m, home, seccion } = useSite()
-  const params = useParams()
-  const { data, error } = useCached(`menu:${site.id}`, () => loadPublicMenu(site.id))
+  const { site, home, cartas } = useSite()
+  const { carta, base, redirect } = useCartaActual()
+  const { data, error } = useCached(`menu:${site.id}:${carta?.id ?? 'principal'}`, () => loadPublicMenu(site.id, carta?.id ?? null))
   const main = useRouteFocus<HTMLElement>()
 
-  if (params.seccion !== m.ruta) return <Navigate to={home} replace />
+  if (redirect) return redirect
+  if (!carta) return <div className="min-h-dvh" />
+  const { t } = carta
 
   return (
     <main ref={main} tabIndex={-1} aria-labelledby="titulo-carta" className="min-h-dvh outline-none">
       <div className="mx-auto max-w-3xl px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-16 sm:px-6">
         <Link to={home} viewTransition className="-ml-1 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm text-niebla transition-colors hover:text-cal">
           <ChevronLeft size={18} aria-hidden />
-          Inicio
+          {t.inicio}
         </Link>
 
         <header className="mt-6 px-1">
-          <h1 id="titulo-carta" className="font-display text-[3.25rem] leading-none text-balance sm:text-[4.5rem]">{m.titulo}</h1>
-          {m.subtitulo && <p className="mt-4 text-niebla">{m.subtitulo}</p>}
+          <h1 id="titulo-carta" className="font-display text-[3.25rem] leading-none text-balance sm:text-[4.5rem]">{carta.titulo}</h1>
+          {carta.subtitulo && <p className="mt-4 text-niebla">{carta.subtitulo}</p>}
         </header>
 
-        {error && <p className="mt-10 px-1 text-niebla">No pudimos cargar {m.el}. Revisa tu conexión y vuelve a intentarlo.</p>}
-        {data && data.categories.length === 0 && <p className="mt-10 px-1 text-niebla">Estamos actualizando {m.el}. Vuelve en un rato.</p>}
+        {/* Con más de una carta (por ejemplo, en inglés), se cambia entre ellas desde aquí. */}
+        {cartas.length > 1 && (
+          <nav aria-label={t.otrasCartas} className="no-scrollbar -mx-4 mt-6 flex gap-2 overflow-x-auto px-4 py-1 sm:-mx-6 sm:px-6">
+            {cartas.map((c) => {
+              const activa = c.ruta === carta.ruta
+              return (
+                <Link
+                  key={c.ruta}
+                  to={`${home}/${c.ruta}`}
+                  replace
+                  viewTransition
+                  lang={c.idioma}
+                  aria-current={activa ? 'page' : undefined}
+                  className={`inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                    activa ? 'bg-cobre text-noche' : 'vidrio border border-cal/12 bg-noche/50 text-cal/85 hover:border-cobre/50 hover:text-cal'
+                  }`}
+                >
+                  {c.nombre}
+                </Link>
+              )
+            })}
+          </nav>
+        )}
+
+        {error && <p className="mt-10 px-1 text-niebla">{t.error}</p>}
+        {data && data.categories.length === 0 && <p className="mt-10 px-1 text-niebla">{t.vacia}</p>}
 
         {!data && !error && (
-          <div className="mt-9 flex flex-col gap-4 sm:gap-5" aria-busy="true" aria-label={`Cargando ${m.el}`}>
+          <div className="mt-9 flex flex-col gap-4 sm:gap-5" aria-busy="true" aria-label={t.cargando}>
             {[0, 1, 2].map((i) => (
               <div key={i} className="h-[clamp(13.5rem,62vw,22rem)] rounded-[1.75rem] bg-noche-2/50 motion-safe:animate-pulse" />
             ))}
@@ -42,7 +68,7 @@ export default function Menu() {
           {(data?.categories ?? []).map((category, index) => (
             <li key={category.id}>
               <Link
-                to={`${seccion}/${category.id}`}
+                to={`${base}/${category.id}`}
                 viewTransition
                 className="group relative isolate block h-[clamp(13.5rem,62vw,22rem)] overflow-hidden rounded-[1.75rem] bg-noche-2/30 transition [clip-path:inset(0_round_1.75rem)] active:scale-[.99]"
               >
@@ -52,7 +78,7 @@ export default function Menu() {
                 <div className="absolute inset-x-0 bottom-0 flex items-end gap-4 p-5 sm:p-7">
                   <div className="min-w-0 flex-1">
                     <span className="etiqueta inline-block rounded-full bg-noche/60 px-2.5 py-1 text-cobre-2 backdrop-blur-md">
-                      {category.items.length} {category.items.length === 1 ? m.uno : m.varios}
+                      {category.items.length} {category.items.length === 1 ? t.uno : t.varios}
                     </span>
                     <h2 className="mt-2 font-display text-[2.1rem] leading-[1.02] text-cal text-balance sm:text-[2.75rem]">{category.name}</h2>
                     {category.description && <p className="mt-2 line-clamp-1 max-w-[46ch] text-sm text-cal/70">{category.description}</p>}

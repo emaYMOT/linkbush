@@ -1,35 +1,65 @@
 import { ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Field, focusFirstInvalid, TextArea, TextInput } from '../../components/Field'
 import ImageUpload from '../../components/ImageUpload'
 import Modal, { Button, CancelButton, ConfirmDialog } from '../../components/Modal'
 import SortableList, { MoveControls, moveInList, RowAction } from '../../components/SortableList'
 import { Switch } from '../../components/Toggle'
-import type { Category, Draft } from '../../lib/types'
+import type { Carta, Category, Draft } from '../../lib/types'
 import { EmptyState, PageTitle } from './AdminApp'
+import { cartaNueva, CartaForm, SelectorCartas } from './Cartas'
 import { useAdminList } from './useAdminList'
 import { useAdminSite } from './contexto'
 
 export default function MenuEditor() {
   const { m, base } = useAdminSite()
-  const categories = useAdminList('menu_categories')
+  const allCategories = useAdminList('menu_categories')
   const items = useAdminList('menu_items')
+  const cartas = useAdminList('menus')
+  const [params, setParams] = useSearchParams()
   const [editing, setEditing] = useState<Draft<Category> | null>(null)
   const [deleting, setDeleting] = useState<Category | null>(null)
+  const [editingCarta, setEditingCarta] = useState<Draft<Carta> | null>(null)
+  const [deletingCarta, setDeletingCarta] = useState<Carta | null>(null)
+
+  // La carta que se edita va en la dirección (?carta=<id>): al volver de una categoría sigue elegida.
+  const pedida = params.get('carta')
+  const carta = cartas.rows?.find((c) => c.id === pedida) ?? null
+  const elegir = (id: string | null) => setParams(id ? { carta: id } : {}, { replace: true })
+  const rows = allCategories.rows?.filter((c) => (c.menu_id ?? null) === (carta?.id ?? null)) ?? null
+  const categories = { ...allCategories, rows }
 
   const countFor = (id: string) => items.rows?.filter((i) => i.category_id === id).length ?? 0
   const deletingCount = deleting ? countFor(deleting.id) : 0
+  const categoriasDe = (id: string) => allCategories.rows?.filter((c) => c.menu_id === id) ?? []
+  const deletingCartaCount = deletingCarta ? categoriasDe(deletingCarta.id).length : 0
 
   return (
     <>
       <PageTitle
         title={m.seccion}
         description={`Cada categoría es un botón ${m.en}. Entra a una para agregar o editar sus ${m.varios}.`}
-        action={<Button onClick={() => setEditing({ name: '', description: '', emoji: '', image_url: null, is_active: true })}><Plus size={19} /> Agregar categoría</Button>}
+        action={<Button onClick={() => setEditing({ name: '', description: '', emoji: '', image_url: null, is_active: true, ...(carta ? { menu_id: carta.id } : {}) })}><Plus size={19} /> Agregar categoría</Button>}
       />
 
-      {categories.rows && categories.rows.length === 0 && <EmptyState>{m.el[0].toUpperCase() + m.el.slice(1)} está {m.el.startsWith('la') ? 'vacía' : 'vacío'}. Empieza creando una categoría, por ejemplo «{m.ejemplos.categoria}».</EmptyState>}
+      {cartas.rows && (
+        <SelectorCartas
+          cartas={cartas.rows}
+          actual={carta?.id ?? null}
+          onElegir={elegir}
+          onNueva={() => setEditingCarta(cartaNueva())}
+          onEditar={(c) => setEditingCarta(c)}
+        />
+      )}
+
+      {categories.rows && categories.rows.length === 0 && (
+        <EmptyState>
+          {carta
+            ? `«${carta.name}» todavía no tiene categorías. Crea la primera o importa la carta desde Ajustes.`
+            : `${m.el[0].toUpperCase() + m.el.slice(1)} está ${m.el.startsWith('la') ? 'vacía' : 'vacío'}. Empieza creando una categoría, por ejemplo «${m.ejemplos.categoria}».`}
+        </EmptyState>
+      )}
 
       {categories.rows && (
         <SortableList
@@ -95,6 +125,41 @@ export default function MenuEditor() {
             items.reload()
           }
           setDeleting(null)
+        }}
+      />
+
+      {editingCarta && cartas.rows && (
+        <CartaForm
+          initial={editingCarta}
+          cartas={cartas.rows}
+          onDelete={editingCarta.id ? () => { setDeletingCarta(editingCarta as Carta); setEditingCarta(null) } : undefined}
+          onClose={() => setEditingCarta(null)}
+          onSave={async (draft) => {
+            const saved = await cartas.save(draft, draft.id ? 'Carta guardada' : 'Carta creada')
+            setEditingCarta(null)
+            elegir(saved.id)
+          }}
+        />
+      )}
+
+      <ConfirmDialog
+        open={!!deletingCarta}
+        title="¿Eliminar esta carta?"
+        message={
+          deletingCartaCount > 0
+            ? `«${deletingCarta?.name}» y ${deletingCartaCount === 1 ? 'su categoría' : `sus ${deletingCartaCount} categorías`} (con tod${m.o}s sus ${m.varios}) se borrarán para siempre. Los botones que la abrían pasarán a abrir ${m.el} principal. Si solo quieres esconderla, desactiva «Visible en la página».`
+            : `«${deletingCarta?.name}» se borrará. Los botones que la abrían pasarán a abrir ${m.el} principal.`
+        }
+        confirmLabel="Eliminar carta"
+        onClose={() => setDeletingCarta(null)}
+        onConfirm={async () => {
+          if (deletingCarta) {
+            await cartas.remove(deletingCarta.id, 'Carta eliminada')
+            elegir(null)
+            allCategories.reload()
+            items.reload()
+          }
+          setDeletingCarta(null)
         }}
       />
     </>

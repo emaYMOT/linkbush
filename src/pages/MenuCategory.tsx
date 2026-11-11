@@ -3,16 +3,18 @@ import { useEffect, useRef } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import CategoryCover from '../components/CategoryCover'
 import { formatPrice, UNITS } from '../lib/format'
-import { useSite } from '../lib/sitio'
+import type { TextosCarta } from '../lib/cartas'
+import { useCartaActual, useSite } from '../lib/sitio'
 import { loadPublicMenu, type MenuSection, type PublicCategory } from '../lib/store'
 import type { MenuItem } from '../lib/types'
 import { useCached } from '../lib/useCached'
 import { useRouteFocus } from '../lib/useRouteFocus'
 
 export default function MenuCategory() {
-  const { site, m, home, seccion } = useSite()
+  const { site } = useSite()
+  const { carta, base, redirect } = useCartaActual()
   const params = useParams()
-  const { data, error } = useCached(`menu:${site.id}`, () => loadPublicMenu(site.id))
+  const { data, error } = useCached(`menu:${site.id}:${carta?.id ?? 'principal'}`, () => loadPublicMenu(site.id, carta?.id ?? null))
   const activeChip = useRef<HTMLAnchorElement>(null)
   const main = useRouteFocus<HTMLElement>()
 
@@ -21,25 +23,27 @@ export default function MenuCategory() {
     window.scrollTo({ top: 0 })
   }, [params.categoryId, data])
 
-  if (params.seccion !== m.ruta) return <Navigate to={home} replace />
+  if (redirect) return redirect
+  if (!carta) return <div className="min-h-dvh" />
+  const { t } = carta
   const category = data?.categories.find((c) => c.id === params.categoryId)
-  if (data && !category) return <Navigate to={seccion} replace />
+  if (data && !category) return <Navigate to={base} replace />
 
   return (
     <main ref={main} tabIndex={-1} className="min-h-dvh outline-none">
       <div className="sticky top-0 z-10 border-b border-cal/8 bg-noche/70 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-2xl items-center gap-1 px-3 py-2.5">
-          <Link to={seccion} viewTransition aria-label={`Volver a ${m.el}`} className="grid size-11 shrink-0 place-items-center rounded-full text-cal transition-colors hover:bg-cal/8">
+          <Link to={base} viewTransition aria-label={t.volver} className="grid size-11 shrink-0 place-items-center rounded-full text-cal transition-colors hover:bg-cal/8">
             <ChevronLeft size={22} aria-hidden />
           </Link>
-          <nav className="no-scrollbar -mr-3 flex gap-2 overflow-x-auto py-1 pr-3" aria-label="Categorías">
+          <nav className="no-scrollbar -mr-3 flex gap-2 overflow-x-auto py-1 pr-3" aria-label={t.categorias}>
             {data?.categories.map((c) => {
               const active = c.id === params.categoryId
               return (
                 <Link
                   key={c.id}
                   ref={active ? activeChip : undefined}
-                  to={`${seccion}/${c.id}`}
+                  to={`${base}/${c.id}`}
                   replace
                   aria-current={active ? 'page' : undefined}
                   className={`inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors ${
@@ -55,9 +59,9 @@ export default function MenuCategory() {
       </div>
 
       <div className="mx-auto max-w-2xl px-4 pt-4 pb-20 sm:px-6">
-        {error && <p className="text-niebla">No pudimos cargar {m.el}. Revisa tu conexión y vuelve a intentarlo.</p>}
+        {error && <p className="text-niebla">{t.error}</p>}
         {!data && !error && (
-          <div aria-busy="true" aria-label="Cargando">
+          <div aria-busy="true" aria-label={t.cargando}>
             <div className="h-[clamp(12rem,52vw,19rem)] rounded-[1.75rem] bg-noche-2/80 motion-safe:animate-pulse" />
             {[0, 1, 2].map((i) => (
               <div key={i} className="mt-6 space-y-2 px-1">
@@ -67,14 +71,13 @@ export default function MenuCategory() {
             ))}
           </div>
         )}
-        {category && <CategoryItems category={category} index={data!.categories.indexOf(category)} />}
+        {category && <CategoryItems category={category} index={data!.categories.indexOf(category)} t={t} />}
       </div>
     </main>
   )
 }
 
-function CategoryItems({ category, index }: { category: PublicCategory; index: number }) {
-  const { m } = useSite()
+function CategoryItems({ category, index, t }: { category: PublicCategory; index: number; t: TextosCarta }) {
   const titled = category.sections.filter((s) => s.name)
   return (
     <>
@@ -83,7 +86,7 @@ function CategoryItems({ category, index }: { category: PublicCategory; index: n
         <div className="absolute -inset-px bg-gradient-to-t from-noche/95 via-noche/30 via-50% to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
           <span className="etiqueta inline-block rounded-full bg-noche/60 px-2.5 py-1 text-cobre-2 backdrop-blur-md">
-            {category.items.length} {category.items.length === 1 ? m.uno : m.varios}
+            {category.items.length} {category.items.length === 1 ? t.uno : t.varios}
           </span>
           <h1 className="mt-2 font-display text-[2.6rem] leading-[1.02] text-balance sm:text-[3.25rem]">{category.name}</h1>
         </div>
@@ -92,7 +95,7 @@ function CategoryItems({ category, index }: { category: PublicCategory; index: n
       {category.description && <p className="sombra-texto-suave mt-5 max-w-[48ch] px-1 text-cal/80">{category.description}</p>}
 
       {titled.length > 0 && (
-        <nav className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 py-1 sm:-mx-6 sm:px-6" aria-label={`Secciones de ${category.name}`}>
+        <nav className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 py-1 sm:-mx-6 sm:px-6" aria-label={t.secciones(category.name)}>
           {titled.map((section) => (
             <button
               key={section.id}
@@ -107,17 +110,17 @@ function CategoryItems({ category, index }: { category: PublicCategory; index: n
       )}
 
       {category.sections.map((section) => (
-        <Section key={section.id ?? 'sin-subcategoria'} section={section} />
+        <Section key={section.id ?? 'sin-subcategoria'} section={section} t={t} />
       ))}
     </>
   )
 }
 
-function Section({ section }: { section: MenuSection }) {
+function Section({ section, t }: { section: MenuSection; t: TextosCarta }) {
   const list = (
     <ul className="mt-3 flex flex-col gap-3">
       {section.items.map((item) => (
-        <ItemCard key={item.id} item={item} nested={!!section.name} />
+        <ItemCard key={item.id} item={item} nested={!!section.name} t={t} />
       ))}
     </ul>
   )
@@ -134,8 +137,7 @@ function Section({ section }: { section: MenuSection }) {
   )
 }
 
-function ItemCard({ item, nested }: { item: MenuItem; nested: boolean }) {
-  const { m } = useSite()
+function ItemCard({ item, nested, t }: { item: MenuItem; nested: boolean; t: TextosCarta }) {
   const Title = nested ? 'h3' : 'h2'
   return (
     <li className="vidrio tarjeta flex items-center gap-4 rounded-3xl border border-cal/10 bg-noche/55 p-4 sm:p-5">
@@ -144,15 +146,15 @@ function ItemCard({ item, nested }: { item: MenuItem; nested: boolean }) {
         <Title className="text-[1.0625rem] leading-snug font-semibold text-balance text-cal">{item.name}</Title>
         {item.price > 0 ? (
           <p className={`mt-1.5 leading-none ${item.is_available ? 'text-cobre' : 'text-niebla line-through decoration-1'}`}>
-            {!item.is_available && <span className="sr-only">Precio, agotado: </span>}
+            {!item.is_available && <span className="sr-only">{t.precioAgotado}</span>}
             <span className="font-precio text-[1.25rem] lining-nums tabular-nums">{formatPrice(item.price)}</span>
             {item.unit && <span className="ml-1 text-sm text-niebla">/ {UNITS[item.unit].short}</span>}
           </p>
         ) : (
-          item.is_available && <p className="mt-1.5 text-sm text-niebla">Consultar precio</p>
+          item.is_available && <p className="mt-1.5 text-sm text-niebla">{t.consultar}</p>
         )}
         {item.description && <p className="mt-1.5 text-base leading-relaxed text-niebla">{item.description}</p>}
-        {!item.is_available && <span className="etiqueta mt-2 inline-block text-grafiti">{m.agotado}</span>}
+        {!item.is_available && <span className="etiqueta mt-2 inline-block text-grafiti">{t.agotado}</span>}
       </div>
       {item.image_url && (
         <img src={item.image_url} alt="" loading="lazy" width={112} height={112} className={`size-24 shrink-0 rounded-xl object-cover sm:size-28 ${item.is_available ? '' : 'opacity-50 grayscale'}`} />

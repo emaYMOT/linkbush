@@ -7,7 +7,7 @@ import { store } from '../lib/store'
 import { useCached } from '../lib/useCached'
 
 export default function Home() {
-  const { site, theme, seccion } = useSite()
+  const { site, theme, rutaCarta } = useSite()
   const { data: links, error } = useCached(`links:${site.id}`, async () => (await store.list('links', site.id)).filter((l) => l.is_active).sort(bySort))
   const { estilo, forma, sombra, tamano } = theme.botones
 
@@ -40,7 +40,7 @@ export default function Home() {
               </>
             )
             return link.type === 'menu' ? (
-              <Link key={link.id} to={seccion} viewTransition data-acento="" {...props}>
+              <Link key={link.id} to={rutaCarta(link.menu_id)} viewTransition data-acento="" {...props}>
                 {content}
               </Link>
             ) : (

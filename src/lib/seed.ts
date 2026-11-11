@@ -1,5 +1,5 @@
 import { temaDePlantilla } from './plantillas'
-import type { Category, LinkButton, MenuItem, Site, Subcategory } from './types'
+import type { Carta, Category, LinkButton, MenuItem, Site, Subcategory } from './types'
 import { VOCAB_PRESETS } from './vocab'
 
 // Dos páginas de ejemplo para el modo demo (sin Supabase): un restaurante y una pescadería.
@@ -90,4 +90,4 @@ const items: MenuItem[] = [
   item('s-brasa', 'c-br-3', 'Corona', 12000, { subcategory_id: 'sc-br-2' }),
 ]
 
-export const demoSeed = { sites, links, menu_categories: categories, menu_subcategories: subcategories, menu_items: items }
+export const demoSeed = { sites, links, menus: [] as Carta[], menu_categories: categories, menu_subcategories: subcategories, menu_items: items }

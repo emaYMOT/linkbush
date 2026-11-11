@@ -6,14 +6,20 @@ import SortableList, { MoveControls, moveInList, RowAction } from '../../compone
 import { Switch } from '../../components/Toggle'
 import { isValidUrl, normalizeUrl } from '../../lib/format'
 import { GRUPOS_ICONOS, guessIcon, iconoSeccion, ICONS, LinkIcon, type IconKey } from '../../lib/icons'
-import type { Draft, LinkButton, LinkType } from '../../lib/types'
+import type { Carta, Draft, LinkButton, LinkType } from '../../lib/types'
 import { EmptyState, PageTitle } from './AdminApp'
+import { Opciones } from './controles'
 import { useAdminList } from './useAdminList'
 import { useAdminSite } from './contexto'
 
 export default function LinksEditor() {
   const { m } = useAdminSite()
   const { rows, save, patch, remove, reorder } = useAdminList('links')
+  const cartas = useAdminList('menus').rows ?? []
+  const abre = (menuId: string | null | undefined) => {
+    const c = cartas.find((x) => x.id === menuId)
+    return c ? `Abre «${c.name}»` : `Abre ${m.el}`
+  }
   const [editing, setEditing] = useState<Draft<LinkButton> | null>(null)
   const [deleting, setDeleting] = useState<LinkButton | null>(null)
 
@@ -40,7 +46,7 @@ export default function LinksEditor() {
               </span>
               <button type="button" onClick={() => setEditing(link)} title={link.type === 'menu' ? link.label : `${link.label}\n${link.url}`} className="min-h-11 min-w-0 flex-1 px-2 text-left">
                 <span className={`block line-clamp-2 leading-snug font-semibold [overflow-wrap:anywhere] ${link.is_active ? '' : 'text-gris line-through decoration-1'}`}>{link.label}</span>
-                <span className="block truncate text-sm text-gris">{link.is_active ? '' : 'Oculto · '}{link.type === 'menu' ? `Abre ${m.el}` : link.url?.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                <span className="block truncate text-sm text-gris">{link.is_active ? '' : 'Oculto · '}{link.type === 'menu' ? abre(link.menu_id) : link.url?.replace(/^https?:\/\/(www\.)?/, '')}</span>
               </button>
               <Switch small checked={link.is_active} onChange={(v) => patch(link.id, { is_active: v }, v ? 'Botón visible' : 'Botón oculto')} label={link.is_active ? 'Visible. Toca para ocultar' : 'Oculto. Toca para mostrar'} />
               <RowAction label="Editar" onClick={() => setEditing(link)}><Pencil size={18} /></RowAction>
@@ -52,6 +58,7 @@ export default function LinksEditor() {
       {editing && (
         <LinkForm
           initial={editing}
+          cartas={cartas}
           onDelete={editing.id ? () => { setDeleting(editing as LinkButton); setEditing(null) } : undefined}
           move={editing.id && rows ? {
             index: rows.findIndex((r) => r.id === editing.id),
@@ -84,7 +91,7 @@ export default function LinksEditor() {
   )
 }
 
-function LinkForm({ initial, onSave, onClose, onDelete, move }: { initial: Draft<LinkButton>; onSave: (draft: Draft<LinkButton>) => Promise<void>; onClose: () => void; onDelete?: () => void; move?: { index: number; total: number; onMove: (direction: -1 | 1) => void } }) {
+function LinkForm({ initial, cartas, onSave, onClose, onDelete, move }: { initial: Draft<LinkButton>; cartas: Carta[]; onSave: (draft: Draft<LinkButton>) => Promise<void>; onClose: () => void; onDelete?: () => void; move?: { index: number; total: number; onMove: (direction: -1 | 1) => void } }) {
   const { m, site } = useAdminSite()
   const [draft, setDraft] = useState(initial)
   const [iconTouched, setIconTouched] = useState(!!initial.id)
@@ -114,7 +121,9 @@ function LinkForm({ initial, onSave, onClose, onDelete, move }: { initial: Draft
     }
     setBusy(true)
     try {
-      await onSave({ ...draft, label: draft.label.trim(), url: draft.type === 'url' ? normalizeUrl(draft.url ?? '') : null })
+      const { menu_id, ...resto } = draft
+      const carta = draft.type === 'menu' && menu_id ? { menu_id } : 'menu_id' in draft ? { menu_id: null } : {}
+      await onSave({ ...resto, ...carta, label: draft.label.trim(), url: draft.type === 'url' ? normalizeUrl(draft.url ?? '') : null })
     } catch {
       setBusy(false)
     }
@@ -164,6 +173,19 @@ function LinkForm({ initial, onSave, onClose, onDelete, move }: { initial: Draft
         <Field label="Texto del botón" error={tried ? labelError : ''}>
           <TextInput value={draft.label} onChange={(e) => set({ label: e.target.value })} placeholder={m.ejemplos.boton} maxLength={60} />
         </Field>
+
+        {draft.type === 'menu' && cartas.length > 0 && (
+          <Opciones
+            legend="¿Qué carta abre?"
+            columns={2}
+            value={draft.menu_id ?? ''}
+            onChange={(id) => set({ menu_id: id || null })}
+            options={[
+              { value: '', label: m.seccion, hint: 'La principal' },
+              ...cartas.map((c) => ({ value: c.id, label: c.name, hint: `${c.idioma === 'en' ? 'En inglés' : 'En español'}${c.is_active ? '' : ' · oculta'}` })),
+            ]}
+          />
+        )}
 
         {draft.type === 'url' && (
           <Field label="Enlace" hint="Copia y pega la dirección completa." error={tried ? urlError : ''}>

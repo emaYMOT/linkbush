@@ -88,6 +88,26 @@ export interface LinkButton {
   type: LinkType
   url: string | null
   icon: string
+  /** Solo para type 'menu': qué carta abre (null = la principal). */
+  menu_id?: string | null
+  position: number
+  is_active: boolean
+}
+
+export type Idioma = 'es' | 'en'
+
+/**
+ * Una carta adicional (la carta en inglés, la de bebidas…). La principal no es una fila: son las categorías
+ * sin menu_id, con el vocabulario de la página.
+ */
+export interface Carta {
+  id: string
+  site_id: string
+  name: string // "English menu": se ve en el selector de cartas
+  ruta: string // /#/<slug>/<ruta>
+  idioma: Idioma // textos fijos de la carta: Inicio/Home, Agotado/Sold out…
+  titulo: string | null
+  subtitulo: string | null
   position: number
   is_active: boolean
 }
@@ -95,6 +115,8 @@ export interface LinkButton {
 export interface Category {
   id: string
   site_id: string
+  /** Carta a la que pertenece (null = la principal). Las páginas guardadas antes no lo traen. */
+  menu_id?: string | null
   name: string
   description: string | null
   emoji: string | null

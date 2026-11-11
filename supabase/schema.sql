@@ -160,6 +160,42 @@ drop policy if exists "editar productos" on public.menu_items;
 create policy "editar productos" on public.menu_items for all to authenticated
   using ((select public.is_admin())) with check ((select public.is_admin()));
 
+-- ---------------------------------------------------------------- Varias cartas
+
+-- Cartas adicionales de una página (por ejemplo, la carta en inglés o la de bebidas).
+-- La carta principal no tiene fila aquí: son las categorías con menu_id = null y usa el vocabulario de la página.
+-- Se puede ejecutar sobre una base que ya existe: solo agrega la tabla y dos columnas opcionales.
+create table if not exists public.menus (
+  id         uuid primary key default gen_random_uuid(),
+  site_id    uuid not null references public.sites (id) on delete cascade,
+  name       text not null check (char_length(name) between 1 and 40),        -- "English menu": se ve en el selector de cartas
+  ruta       text not null check (char_length(ruta) between 2 and 40 and ruta ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),  -- /#/<slug>/<ruta>
+  idioma     text not null default 'es' check (idioma in ('es', 'en')),      -- textos fijos de la carta (Inicio/Home, Agotado/Sold out…)
+  titulo     text check (char_length(titulo) <= 60),
+  subtitulo  text check (char_length(subtitulo) <= 160),
+  position   int  not null default 0,
+  is_active  boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique (site_id, ruta)
+);
+create index if not exists menus_site_idx on public.menus (site_id);
+
+-- Cada categoría pertenece a una carta (null = la principal). Borrar una carta borra sus categorías.
+alter table public.menu_categories add column if not exists menu_id uuid references public.menus (id) on delete cascade;
+create index if not exists menu_categories_menu_idx on public.menu_categories (menu_id);
+-- Un botón de tipo carta abre una carta concreta (null = la principal; si se borra la carta, vuelve a la principal).
+alter table public.links add column if not exists menu_id uuid references public.menus (id) on delete set null;
+
+grant select on public.menus to anon, authenticated;
+grant insert, update, delete on public.menus to authenticated;
+alter table public.menus enable row level security;
+drop policy if exists "leer cartas" on public.menus;
+create policy "leer cartas" on public.menus for select to anon, authenticated
+  using ((is_active and public.site_publicado(site_id)) or (select public.is_admin()));
+drop policy if exists "editar cartas" on public.menus;
+create policy "editar cartas" on public.menus for all to authenticated
+  using ((select public.is_admin())) with check ((select public.is_admin()));
+
 -- ---------------------------------------------------------------- Fotos y videos
 
 -- Bucket público: fotos (el panel las comprime a WebP) y videos de fondo (máx. 20 MB).

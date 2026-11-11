@@ -14,6 +14,7 @@ Una sola app para crear páginas de negocios: enlaces tipo Linktree, carta o cat
 - **Carta / Catálogo**
   - Categorías con foto o emoji, subcategorías (secciones) y productos.
   - Cada producto lleva precio, unidad (lb / unidad / kg), foto, agotado y oculto.
+  - **Varias cartas** por página (por ejemplo, la carta en inglés o una de bebidas). Cada una tiene su dirección (`#/pez-y-mar/english-menu`), idioma de los textos fijos (español o inglés), título y frase. En la página aparece un selector para cambiar de carta, y cada botón de tipo carta elige cuál abre. Al importar un JSON se elige a qué carta va.
 - **Perfil**: foto o logo, nombre, descripción, y título y descripción para buscadores.
 - **Diseño**, con vista previa en vivo:
   - 10 plantillas listas para usar.

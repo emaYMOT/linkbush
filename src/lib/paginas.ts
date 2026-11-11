@@ -65,8 +65,11 @@ export async function duplicarPagina(source: Site, name: string, slug: string) {
     const rows = await store.list(c, source.id)
     await store.insertMany(c, rows.map((r) => ({ ...map(r), site_id: site.id })))
   }
-  await copy('links', (r) => ({ ...r, id: crypto.randomUUID() }))
-  await copy('menu_categories', (r) => ({ ...r, id: nuevo(r.id) }))
+  // Primero las cartas adicionales: categorías y botones apuntan a ellas por id.
+  await copy('menus', (r) => ({ ...r, id: nuevo(r.id) }))
+  const carta = (old: string | null | undefined) => (old ? (ids.get(old) ?? null) : null)
+  await copy('links', (r) => ({ ...r, id: crypto.randomUUID(), ...(r.menu_id ? { menu_id: carta(r.menu_id) } : {}) }))
+  await copy('menu_categories', (r) => ({ ...r, id: nuevo(r.id), ...(r.menu_id ? { menu_id: carta(r.menu_id) } : {}) }))
   await copy('menu_subcategories', (r) => ({ ...r, id: nuevo(r.id), category_id: ids.get(r.category_id)! }))
   await copy('menu_items', (r) => ({
     ...r,
@@ -127,9 +130,12 @@ export function contarProductos(cat: CatalogoImportado) {
   return cat.categorias.reduce((n, c) => n + c.grupos.reduce((m, g) => m + g.productos.length, 0), 0)
 }
 
-/** Agrega el catálogo a la página (o lo reemplaza: borra antes todas las categorías). */
-export async function importarCatalogo(siteId: string, cat: CatalogoImportado, reemplazar: boolean) {
-  const existentes = await store.list('menu_categories', siteId)
+/**
+ * Agrega el catálogo a una carta de la página (null = la principal), o lo reemplaza: borra antes las categorías
+ * de esa carta (las de las otras cartas no se tocan).
+ */
+export async function importarCatalogo(siteId: string, cat: CatalogoImportado, reemplazar: boolean, menuId: string | null = null) {
+  const existentes = (await store.list('menu_categories', siteId)).filter((c) => (c.menu_id ?? null) === menuId)
   if (reemplazar) for (const c of existentes) await store.remove('menu_categories', c.id)
   let posCat = reemplazar ? 0 : existentes.reduce((m, c) => Math.max(m, c.position + 1), 0)
 
@@ -138,7 +144,11 @@ export async function importarCatalogo(siteId: string, cat: CatalogoImportado, r
   const items: MenuItem[] = []
   for (const c of cat.categorias) {
     const categoryId = crypto.randomUUID()
-    categories.push({ id: categoryId, site_id: siteId, name: c.nombre, emoji: c.emoji, description: c.descripcion, image_url: c.portada, position: posCat++, is_active: true })
+    categories.push({
+      id: categoryId, site_id: siteId, name: c.nombre, emoji: c.emoji, description: c.descripcion, image_url: c.portada, position: posCat++, is_active: true,
+      // Solo se envía si hay carta: así importar a la principal sigue funcionando en bases sin la columna.
+      ...(menuId ? { menu_id: menuId } : {}),
+    })
     let posItem = 0
     c.grupos.forEach((g, gi) => {
       const subId = g.nombre ? crypto.randomUUID() : null

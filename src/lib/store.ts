@@ -2,16 +2,18 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { bySort } from './format'
 import { demoSeed } from './seed'
 import { completarTema } from './tema'
-import type { Category, Draft, LinkButton, MenuItem, Site, Subcategory } from './types'
+import type { Carta, Category, Draft, LinkButton, MenuItem, Site, Subcategory } from './types'
 
-export type Collection = 'links' | 'menu_categories' | 'menu_subcategories' | 'menu_items'
+export type Collection = 'links' | 'menus' | 'menu_categories' | 'menu_subcategories' | 'menu_items'
 export type RowOf<C extends Collection> = C extends 'links'
   ? LinkButton
-  : C extends 'menu_categories'
-    ? Category
-    : C extends 'menu_subcategories'
-      ? Subcategory
-      : MenuItem
+  : C extends 'menus'
+    ? Carta
+    : C extends 'menu_categories'
+      ? Category
+      : C extends 'menu_subcategories'
+        ? Subcategory
+        : MenuItem
 
 export type ImageFolder = 'avatar' | 'items' | 'categories'
 export type NewSite = Omit<Site, 'id' | 'created_at' | 'updated_at'>
@@ -243,6 +245,7 @@ const DEMO_KEY = 'paginas-demo-v1'
 interface DemoData {
   sites: Site[]
   links: LinkButton[]
+  menus: Carta[]
   menu_categories: Category[]
   menu_subcategories: Subcategory[]
   menu_items: MenuItem[]
@@ -307,7 +310,7 @@ function demoStore(): DataStore {
     async removeSite(id) {
       const data = read()
       data.sites = data.sites.filter((s) => s.id !== id)
-      for (const c of ['links', 'menu_categories', 'menu_subcategories', 'menu_items'] as const) {
+      for (const c of ['links', 'menus', 'menu_categories', 'menu_subcategories', 'menu_items'] as const) {
         ;(data[c] as RowOf<Collection>[]) = rowsOf(data, c).filter((r) => r.site_id !== id)
       }
       write(data)
@@ -345,6 +348,14 @@ function demoStore(): DataStore {
     async remove(collection, id) {
       const data = read()
       ;(data[collection] as RowOf<Collection>[]) = rowsOf(data, collection).filter((r) => r.id !== id)
+      // Igual que en la base de datos: borrar una carta borra sus categorías, y sus botones vuelven a la principal.
+      if (collection === 'menus') {
+        const categorias = new Set(data.menu_categories.filter((c) => c.menu_id === id).map((c) => c.id))
+        data.menu_categories = data.menu_categories.filter((c) => !categorias.has(c.id))
+        data.menu_items = data.menu_items.filter((i) => !categorias.has(i.category_id))
+        data.menu_subcategories = data.menu_subcategories.filter((s) => !categorias.has(s.category_id))
+        for (const link of data.links) if (link.menu_id === id) link.menu_id = null
+      }
       if (collection === 'menu_categories') {
         data.menu_items = data.menu_items.filter((i) => i.category_id !== id)
         data.menu_subcategories = data.menu_subcategories.filter((s) => s.category_id !== id)
@@ -406,7 +417,7 @@ export const store: DataStore = url && anonKey ? supabaseStore(createClient(url,
  * Para la vista pública: solo lo visible, en orden. Cada categoría trae sus productos en secciones:
  * primero los que no tienen subcategoría (sin título) y luego una sección por subcategoría.
  */
-export async function loadPublicMenu(siteId: string) {
+export async function loadPublicMenu(siteId: string, menuId: string | null = null) {
   const [categories, subcategories, items] = await Promise.all([
     store.list('menu_categories', siteId),
     store.list('menu_subcategories', siteId),
@@ -415,7 +426,7 @@ export async function loadPublicMenu(siteId: string) {
   const visibleItems = items.filter((i) => i.is_active).sort(bySort)
   return {
     categories: categories
-      .filter((c) => c.is_active)
+      .filter((c) => c.is_active && (c.menu_id ?? null) === menuId)
       .sort(bySort)
       .map((category) => {
         const own = visibleItems.filter((i) => i.category_id === category.id)

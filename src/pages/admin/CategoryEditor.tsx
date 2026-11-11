@@ -28,6 +28,8 @@ export default function CategoryEditor() {
   const [deletingSub, setDeletingSub] = useState<Subcategory | null>(null)
 
   const category = categories.rows?.find((c) => c.id === categoryId)
+  // Volver a la carta de esta categoría (la principal no lleva ?carta).
+  const volver = `${base}/catalogo${category?.menu_id ? `?carta=${category.menu_id}` : ''}`
   const subs = subcategories.rows?.filter((s) => s.category_id === categoryId) ?? []
   const list = items.rows?.filter((i) => i.category_id === categoryId) ?? null
 
@@ -58,7 +60,7 @@ export default function CategoryEditor() {
 
   return (
     <>
-      <Link to={`${base}/catalogo`} className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-gris hover:text-tinta">
+      <Link to={volver} className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-gris hover:text-tinta">
         <ChevronLeft size={18} /> Todas las categorías
       </Link>
 

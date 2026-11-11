@@ -4,6 +4,8 @@ import HeroBackground from '../components/HeroBackground'
 import Home from './Home'
 import Menu from './Menu'
 import MenuCategory from './MenuCategory'
+import { cartaPrincipal, cartaPublica } from '../lib/cartas'
+import { bySort } from '../lib/format'
 import { SiteProvider } from '../lib/sitio'
 import { store } from '../lib/store'
 import { aplicarTema } from '../lib/tema'
@@ -25,6 +27,10 @@ export default function SiteLayout() {
   // Dentro del iframe del panel: escucha el diseño sin guardar (aunque se navegue dentro de la vista previa).
   const preview = window.parent !== window
   const { data: site, error } = useCached(`site:${slug}`, () => store.getSiteBySlug(slug))
+  // Las cartas adicionales (inglés, bebidas…). Si fallan, la principal sigue funcionando.
+  const { data: menus, error: menusError } = useCached(`menus:${site?.id ?? slug}`, async () =>
+    site ? (await store.list('menus', site.id)).filter((c) => c.is_active).sort(bySort) : undefined,
+  )
   const [previewTheme, setPreviewTheme] = useState<Theme | null>(null)
 
   useEffect(() => {
@@ -56,10 +62,16 @@ export default function SiteLayout() {
   const m = palabras(site.vocab)
   const home = `/${site.slug}`
   const seccion = `${home}/${m.ruta}`
+  const principal = cartaPrincipal(m)
+  // Junto a una carta en inglés, la principal se nombra por su idioma: «Carta» no le dice nada a un turista.
+  if (menus?.some((c) => c.idioma === 'en')) principal.nombre = 'Español'
+  const cartas = [principal, ...(menus ?? []).map((c) => cartaPublica(c, m))]
+  const rutaCarta = (menuId: string | null | undefined) => `${home}/${cartas.find((c) => c.id === (menuId ?? null))?.ruta ?? m.ruta}`
 
   return (
-    <SiteProvider value={{ site, theme, m, home, seccion }}>
-      <HeroBackground theme={theme} dim={pathname.startsWith(seccion)} />
+    <SiteProvider value={{ site, theme, m, home, seccion, cartas, cartasListas: menus !== undefined || !!menusError, rutaCarta }}>
+      {/* Fuera del inicio (en cualquier carta) el fondo se oscurece para que se lea. */}
+      <HeroBackground theme={theme} dim={pathname !== home && pathname !== `${home}/`} />
       {!site.published && !preview && (
         <p className="fixed top-[max(.75rem,env(safe-area-inset-top))] left-1/2 z-30 -translate-x-1/2 rounded-full bg-black/75 px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap text-white backdrop-blur">
           Borrador · solo tú la ves

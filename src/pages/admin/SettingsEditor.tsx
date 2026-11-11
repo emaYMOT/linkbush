@@ -15,6 +15,7 @@ import { DeleteSiteDialog, DuplicateDialog, QrDialog } from './acciones'
 import { Card, PageTitle } from './AdminApp'
 import { useAdmin, useAdminSite } from './contexto'
 import { Opciones } from './controles'
+import { useAdminList } from './useAdminList'
 
 export default function SettingsEditor() {
   const { site, update } = useAdminSite()
@@ -249,6 +250,10 @@ function ImportCard() {
   const [data, setData] = useState<CatalogoImportado | null>(null)
   const [reemplazar, setReemplazar] = useState(false)
   const [busy, setBusy] = useState(false)
+  // Con varias cartas, se elige a cuál va el archivo ('' = la principal).
+  const cartas = useAdminList('menus').rows ?? []
+  const [destino, setDestino] = useState('')
+  const cartaDestino = cartas.find((c) => c.id === destino)
 
   async function pick(file: File | undefined) {
     if (input.current) input.current.value = ''
@@ -265,7 +270,7 @@ function ImportCard() {
     if (!data) return
     setBusy(true)
     try {
-      await importarCatalogo(site.id, data, reemplazar)
+      await importarCatalogo(site.id, data, reemplazar, cartaDestino?.id ?? null)
       clearPublicCache()
       toast.success(`${m.seccion} importad${m.el.startsWith('la') ? 'a' : 'o'}`)
       setData(null)
@@ -299,6 +304,18 @@ function ImportCard() {
             <p>
               El archivo trae <strong>{data.categorias.length}</strong> {data.categorias.length === 1 ? 'categoría' : 'categorías'}, <strong>{subs}</strong> {subs === 1 ? 'subcategoría' : 'subcategorías'} y <strong>{contarProductos(data)}</strong> {m.varios}.
             </p>
+            {cartas.length > 0 && (
+              <Opciones
+                legend="¿A qué carta va?"
+                columns={2}
+                value={destino}
+                onChange={setDestino}
+                options={[
+                  { value: '', label: m.seccion, hint: 'La principal' },
+                  ...cartas.map((c) => ({ value: c.id, label: c.name, hint: c.idioma === 'en' ? 'En inglés' : 'En español' })),
+                ]}
+              />
+            )}
             <Opciones
               legend="¿Qué hago con lo que ya hay?"
               columns={2}
@@ -306,7 +323,7 @@ function ImportCard() {
               onChange={(v) => setReemplazar(v === 'si')}
               options={[
                 { value: 'no', label: 'Agregar', hint: 'Se suma después de las categorías actuales' },
-                { value: 'si', label: 'Reemplazar', hint: `Borra ${m.el} actual y deja solo lo del archivo` },
+                { value: 'si', label: 'Reemplazar', hint: cartaDestino ? `Borra lo que hay en «${cartaDestino.name}» y deja solo lo del archivo` : `Borra ${m.el} actual y deja solo lo del archivo` },
               ]}
             />
             <p className="text-sm text-gris">Las fotos que vengan con rutas de otra web no se importan; súbelas después en cada {m.uno}.</p>
