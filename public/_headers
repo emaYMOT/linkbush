@@ -1,0 +1,19 @@
+# Cuánto tiempo guarda el celular cada archivo (solo lo lee Cloudflare Pages; GitHub Pages lo ignora).
+# La página (index.html) no se guarda: así un cambio publicado se ve al instante.
+
+# Código de la app: Vite le pone un código al nombre de cada versión, nunca cambia.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fotos de las cartas: el nombre sale del enlace original, casi nunca cambian. 30 días.
+/media/fotos/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+
+# Videos de fondo y avatares: pueden rehacerse con el mismo nombre. 1 día, y una semana más mientras revisa.
+/media/videos/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/media/avatares/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/media/demo/*
+  Cache-Control: public, max-age=604800

@@ -65,6 +65,19 @@ Prueba completa del panel (con el servidor corriendo): `npm run e2e -- http://lo
 
 El workflow `keepalive.yml` consulta la base cada 3 días, para que el plan gratis de Supabase no pause el proyecto.
 
+### En Cloudflare Pages (gratis)
+
+Cloudflare publica el mismo repositorio con cada `git push`, igual que GitHub Pages. Además respeta `public/_headers`, que deja guardados en el celular las fotos (30 días), los videos (1 día) y el código, en vez de solo 10 minutos.
+
+1. En dash.cloudflare.com: **Workers & Pages → Create → Pages → Connect to Git** y elige este repositorio.
+2. Configuración de compilación:
+   - Framework preset: *None*.
+   - Build command: `npm run build`.
+   - Build output directory: `dist`.
+3. Variables de entorno: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (la publicable) y `NODE_VERSION` = `22`.
+
+Queda en `https://<proyecto>.pages.dev`. El plan gratis permite tráfico ilimitado, 500 publicaciones al mes y hasta 20.000 archivos de máximo 25 MB cada uno.
+
 ## Límites a tener en cuenta
 
 - **Videos**: el plan gratis de Supabase trae unos 5 GB de descarga al mes, sumando todas las páginas. Un video de 6 MB alcanza para unas 800 visitas.
