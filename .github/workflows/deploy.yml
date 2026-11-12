@@ -1,8 +1,13 @@
-name: Publicar en GitHub Pages
+name: Redirigir GitHub Pages a Cloudflare
+
+# La app se publica en Cloudflare Pages (https://linkbush.pages.dev), que compila sola con cada push.
+# GitHub Pages solo publica una página que lleva cualquier enlace viejo de emaymot.github.io/linkbush/
+# a la misma página en Cloudflare (se conserva el #/slug).
 
 on:
   push:
     branches: [main]
+    paths: [.github/workflows/deploy.yml]
   workflow_dispatch:
 
 permissions:
@@ -18,19 +23,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      - name: Crear la página de redirección
+        run: |
+          mkdir sitio
+          cat > sitio/index.html <<'HTML'
+          <!doctype html>
+          <html lang="es">
+          <meta charset="utf-8">
+          <meta name="robots" content="noindex">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Link Bush</title>
+          <script>
+            var resto = location.pathname.replace(/^\/linkbush\/?/, '');
+            location.replace('https://linkbush.pages.dev/' + resto + location.search + location.hash);
+          </script>
+          <p style="font-family:system-ui;padding:2rem">Link Bush se mudó a <a href="https://linkbush.pages.dev/">linkbush.pages.dev</a>.</p>
+          </html>
+          HTML
+          cp sitio/index.html sitio/404.html
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: sitio
 
   deploy:
     needs: build

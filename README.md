@@ -63,6 +63,8 @@ Prueba completa del panel (con el servidor corriendo): `npm run e2e -- http://lo
    3. En *Settings > Pages*, en *Source*, elige **GitHub Actions**.
 4. Haz `git push` a `main`: el workflow `deploy.yml` publica la web en unos 30–60 s.
 
+GitHub Pages ya no publica la app: `deploy.yml` solo deja ahí una redirección a Cloudflare.
+
 El workflow `keepalive.yml` consulta la base cada 3 días, para que el plan gratis de Supabase no pause el proyecto.
 
 ### En Cloudflare Pages (gratis)
