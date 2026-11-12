@@ -49,6 +49,12 @@ export default function SiteAdmin() {
     }
   }, [tabActual, siteId, !!site])
 
+  // Si la foto de perfil no tiene su JPG para compartir (subida con una versión anterior del panel, o falló), se crea.
+  const avatar = site?.avatar_url ?? null
+  useEffect(() => {
+    store.ensureShareImage(avatar).catch((e) => console.warn('No se pudo crear la foto para compartir:', e))
+  }, [avatar])
+
   if (!sites) return null
   if (!site) {
     return (

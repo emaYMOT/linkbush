@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { bySort } from './format'
 import { demoSeed } from './seed'
 import { completarTema } from './tema'
+import { rutaCompartir } from './medios'
 import type { Carta, Category, Draft, LinkButton, MenuItem, Site, Subcategory } from './types'
 
 export type Collection = 'links' | 'menus' | 'menu_categories' | 'menu_subcategories' | 'menu_items'
@@ -68,6 +69,8 @@ export interface DataStore {
   reorder(collection: Collection, orderedIds: string[]): Promise<void>
   uploadImage(file: File, siteId: string, folder: ImageFolder): Promise<string>
   uploadVideo(file: File, siteId: string): Promise<string>
+  /** Si a una foto de perfil subida desde el panel le falta su JPG para compartir, lo crea (en demo no hace nada). */
+  ensureShareImage(avatarUrl: string | null): Promise<void>
   /** Archivos guardados de una página (en demo no hay: las fotos viven dentro de la página). */
   listFiles(siteId: string): Promise<StoredFile[]>
   removeFiles(paths: string[]): Promise<void>
@@ -235,12 +238,26 @@ function supabaseStore(client: SupabaseClient): DataStore {
       // La foto de perfil lleva además su JPG para compartir ("-c"). Si falla, se comparte la foto tal cual.
       if (folder === 'avatar') {
         try {
-          await upload(`${siteId}/${folder}/${id}-c.jpg`, await jpgCompartir(file), 'image/jpeg')
+          await upload(`${siteId}/${folder}/${id}-c.jpg`, await jpgCompartir(small), 'image/jpeg')
         } catch (e) {
           console.warn('No se pudo guardar la foto para compartir:', e)
         }
       }
       return url
+    },
+
+    async ensureShareImage(avatarUrl) {
+      const ruta = avatarUrl?.match(/\/object\/public\/media\/(.+?)(?:\?.*)?$/)?.[1]
+      const jpg = ruta ? rutaCompartir(decodeURIComponent(ruta)) : null
+      if (!avatarUrl || !jpg) return
+      const publica = client.storage.from('media').getPublicUrl(jpg).data.publicUrl
+      // Si no se puede saber (sin conexión), mejor no tocar nada.
+      const existe = await fetch(publica, { method: 'HEAD', cache: 'no-store' }).then((r) => r.ok, () => true)
+      if (existe) return
+      const r = await fetch(avatarUrl)
+      if (!r.ok) throw new Error(`No se pudo leer la foto de perfil (${r.status})`)
+      const blob = await r.blob()
+      await upload(jpg, await jpgCompartir(new File([blob], 'avatar.webp', { type: blob.type })), 'image/jpeg')
     },
 
     async uploadVideo(file, siteId) {
@@ -457,6 +474,8 @@ function demoStore(): DataStore {
       const small = await compress(file, MAX_SIDE[folder][1])
       return (await compresor()).getDataUrlFromFile(small)
     },
+
+    ensureShareImage: async () => {},
 
     async uploadVideo() {
       throw new Error('En modo demo el video no cabe en el navegador. Pega el enlace de un video o conecta Supabase.')
