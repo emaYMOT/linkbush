@@ -91,7 +91,7 @@ Queda en `https://linkbush.pages.dev`. El plan gratis tiene tráfico ilimitado, 
 - **Videos**: el plan gratis de Supabase trae unos 5 GB de descarga al mes, sumando todas las páginas. Un video de 6 MB alcanza para unas 800 visitas.
   - Usa videos de 720p y de 2 a 4 MB. El panel avisa por encima de 8 MB y no acepta más de 20 MB.
   - También puedes pegar el enlace de un video alojado en otro lugar.
-- **Vista previa al compartir**: WhatsApp muestra el título general de la app, no el de cada página, porque WhatsApp no ejecuta la app. Como las direcciones ya son reales (sin `#`), se puede resolver con una función de Cloudflare Pages que ponga el título y la foto de cada página.
+- **Vista previa al compartir** (WhatsApp, Instagram…): `functions/[[path]].js`, una función de Cloudflare Pages, escribe el nombre, la descripción y la foto de cada página en el HTML. La foto sale de `public/media/compartir/<dirección>.jpg`; si no existe, usa la foto de perfil. Para crear o rehacer esos JPG: `node scripts/fotos-compartir.mjs fotos.json`. WhatsApp guarda la vista previa de cada enlace un tiempo, así que un cambio puede tardar en verse.
 
 ## Estructura
 
