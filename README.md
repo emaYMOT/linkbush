@@ -69,15 +69,18 @@ El workflow `keepalive.yml` consulta la base cada 3 días, para que el plan grat
 
 Cloudflare publica el mismo repositorio con cada `git push`, igual que GitHub Pages. Además respeta `public/_headers`, que deja guardados en el celular las fotos (30 días), los videos (1 día) y el código, en vez de solo 10 minutos.
 
-Está publicado como un Worker con archivos estáticos llamado `linkbush`, conectado a este repositorio. La configuración vive en `wrangler.jsonc`.
+Se usa Pages y no Workers porque la dirección queda limpia: `<proyecto>.pages.dev`, sin el nombre de la cuenta.
 
-1. En dash.cloudflare.com: **Workers & Pages → Create → Import a repository** y elige este repositorio.
-   - Project name: `linkbush`. Debe ser igual al `name` de `wrangler.jsonc`.
+1. En dash.cloudflare.com, entra a **Workers & Pages → Create**, elige la pestaña **Pages** y luego **Connect to Git**. Selecciona este repositorio.
+2. Configuración de compilación:
+   - Project name: `linkbush`.
+   - Production branch: `main`.
+   - Framework preset: *None*.
    - Build command: `npm run build`.
-   - Deploy command: `npx wrangler deploy`.
-2. En **Settings → Build → Variables and secrets** agrega `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (la publicable) y `NODE_VERSION` = `22`. Tienen que estar en la sección de *build*, porque la app las necesita al compilar.
+   - Build output directory: `dist`.
+3. En **Environment variables** agrega `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (la publicable) y `NODE_VERSION` = `22`.
 
-Queda en `https://linkbush.<subdominio>.workers.dev`. Servir archivos estáticos es gratis y sin límite de visitas. Cada versión admite hasta 20.000 archivos de máximo 25 MB cada uno.
+Queda en `https://linkbush.pages.dev`. El plan gratis tiene tráfico ilimitado, 500 publicaciones al mes y admite hasta 20.000 archivos de máximo 25 MB cada uno.
 
 ## Límites a tener en cuenta
 
