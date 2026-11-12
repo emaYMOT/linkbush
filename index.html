@@ -6,14 +6,16 @@
     <meta name="theme-color" content="#06121d" />
     <meta name="description" content="Páginas de enlaces, carta y catálogo para negocios." />
     <title>Link Bush</title>
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script>
-      // Antes de pintar: modo claro u oscuro del panel, y fondo correcto si se abre directo en #/admin.
+      // Enlaces viejos con # (linkbush.pages.dev/#/oh-food): pasan a la dirección sin # antes de arrancar la app.
+      if (location.hash.indexOf('#/') === 0) history.replaceState(null, '', location.hash.slice(1) || '/')
+      // Antes de pintar: modo claro u oscuro del panel, y fondo correcto si se abre directo en /admin.
       try {
         var modo = localStorage.getItem('panel-modo')
         if (modo === 'oscuro' || (modo !== 'claro' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('oscuro')
       } catch (e) {}
-      if (location.hash.indexOf('#/admin') === 0) document.documentElement.dataset.ruta = 'admin'
+      if (location.pathname === '/admin' || location.pathname.indexOf('/admin/') === 0) document.documentElement.dataset.ruta = 'admin'
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

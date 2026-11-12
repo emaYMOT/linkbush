@@ -48,9 +48,9 @@ export function SelectorCartas({ cartas, actual, onElegir, onNueva, onEditar }: 
           {editando && (
             <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-linea px-1 pt-3 text-sm text-gris">
               <span className="min-w-0 flex-1 truncate">
-                {editando.idioma === 'en' ? 'En inglés' : 'En español'} · <code>#/{site.slug}/{editando.ruta}</code>
+                {editando.idioma === 'en' ? 'En inglés' : 'En español'} · <code>/{site.slug}/{editando.ruta}</code>
               </span>
-              <a href={`#/${site.slug}/${editando.ruta}`} target="_blank" rel="noopener" className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2.5 font-semibold text-tinta hover:bg-papel">
+              <a href={`/${site.slug}/${editando.ruta}`} target="_blank" rel="noopener" className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2.5 font-semibold text-tinta hover:bg-papel">
                 <ExternalLink size={16} /> Ver
               </a>
               <Button variant="outline" onClick={() => onEditar(editando)}><Pencil size={16} /> Editar carta</Button>
@@ -88,7 +88,7 @@ export function CartaForm({ initial, cartas, onSave, onClose, onDelete }: {
     // Si el nombre sigue siendo el sugerido, se cambia con el idioma.
     const sugeridos = ['English menu', 'Carta en español', '']
     set({ idioma, ...(sugeridos.includes(draft.name) ? { name: idioma === 'en' ? 'English menu' : 'Carta en español' } : {}) })
-    if (!rutaTocada && sugeridos.includes(draft.name)) set({ ruta: idioma === 'en' ? 'english-menu' : 'carta-en-espanol' })
+    if (!rutaTocada && sugeridos.includes(draft.name)) set({ ruta: idioma === 'en' ? 'englishmenu' : 'cartaenespanol' })
   }
 
   async function submit() {
@@ -134,12 +134,12 @@ export function CartaForm({ initial, cartas, onSave, onClose, onDelete }: {
         <Field label="Nombre" hint="Así aparece en el selector de cartas de la página." error={tried ? nameError : ''}>
           <TextInput value={draft.name} onChange={(e) => cambiarNombre(e.target.value)} placeholder={draft.idioma === 'en' ? 'English menu' : 'Bebidas'} maxLength={40} />
         </Field>
-        <Field label="Dirección" hint={`La carta queda en #/${site.slug}/${draft.ruta || '…'}`} error={tried ? rutaError : ''}>
+        <Field label="Dirección" hint={`La carta queda en /${site.slug}/${draft.ruta || '…'}`} error={tried ? rutaError : ''}>
           <TextInput
             value={draft.ruta}
             onChange={(e) => {
               setRutaTocada(true)
-              set({ ruta: e.target.value.toLowerCase().replace(/\s+/g, '-') })
+              set({ ruta: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') })
             }}
             placeholder="english-menu"
             autoCapitalize="off"
@@ -158,4 +158,4 @@ export function CartaForm({ initial, cartas, onSave, onClose, onDelete }: {
   )
 }
 
-export const cartaNueva = (): Draft<Carta> => ({ name: 'English menu', ruta: 'english-menu', idioma: 'en', titulo: null, subtitulo: null, is_active: true })
+export const cartaNueva = (): Draft<Carta> => ({ name: 'English menu', ruta: 'englishmenu', idioma: 'en', titulo: null, subtitulo: null, is_active: true })

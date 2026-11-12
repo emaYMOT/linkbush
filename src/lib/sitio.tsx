@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useParams } from 'react-router-dom'
 import type { CartaPublica } from './cartas'
 import type { Site, Theme } from './types'
 import type { Palabras } from './vocab'
@@ -28,13 +28,17 @@ export function useSite(): SiteCtx {
 }
 
 /**
- * La carta de la dirección actual (/#/<slug>/<ruta>…). Si la ruta no es de ninguna carta, vuelve al inicio;
+ * La carta de la dirección actual (/<slug>/<ruta>…). Si la ruta no es de ninguna carta, vuelve al inicio;
  * mientras cargan las cartas adicionales devuelve null (la pantalla espera sin saltar).
  */
 export function useCartaActual(): { carta: CartaPublica | null; base: string; redirect: React.ReactNode | null } {
   const { cartas, cartasListas, home } = useSite()
   const { seccion } = useParams()
+  const { pathname } = useLocation()
   const carta = cartas.find((c) => c.ruta === seccion) ?? null
+  // Enlace viejo con guion (/ohfood/english-menu): lleva a la carta sin guion (/ohfood/englishmenu).
+  const sinGuion = seccion?.replace(/-/g, '')
+  const vieja = !carta && sinGuion !== seccion ? cartas.find((c) => c.ruta === sinGuion) : undefined
 
   // Lectores de pantalla y traductores: la carta en inglés se anuncia en inglés.
   const idioma = carta?.idioma ?? 'es'
@@ -45,6 +49,10 @@ export function useCartaActual(): { carta: CartaPublica | null; base: string; re
     }
   }, [idioma])
 
-  const redirect = !carta && cartasListas ? <Navigate to={home} replace /> : null
+  const redirect = vieja ? (
+    <Navigate to={pathname.replace(`/${seccion}`, `/${vieja.ruta}`)} replace />
+  ) : !carta && cartasListas ? (
+    <Navigate to={home} replace />
+  ) : null
   return { carta, base: carta ? `${home}/${carta.ruta}` : home, redirect }
 }

@@ -407,7 +407,7 @@ function VistaPrevia({ theme }: { theme: Theme }) {
     return () => window.removeEventListener('message', onMessage)
   }, [])
 
-  const src = `${location.pathname}#/${site.slug}${pagina === 'seccion' ? `/${m.ruta}` : ''}`
+  const src = `/${site.slug}${pagina === 'seccion' ? `/${m.ruta}` : ''}`
 
   return (
     <div className="flex h-full flex-col items-center gap-3">

@@ -2,8 +2,10 @@
 
 Una sola app para crear páginas de negocios: enlaces tipo Linktree, carta o catálogo con precios, y video de fondo. Todo se maneja desde **un único panel**: ahí creas cada página y editas su contenido y su diseño.
 
-- Página pública: `…/#/<dirección>`, por ejemplo `#/pez-y-mar`. La carta o catálogo queda en `#/pez-y-mar/catalogo`.
-- Panel: `…/#/admin`.
+- Página pública: `…/<dirección>`, por ejemplo `linkbush.pages.dev/pezymar`. La carta o catálogo queda en `/pezymar/catalogo`.
+- Panel: `…/admin`.
+- Las direcciones de páginas y cartas van sin guiones: solo minúsculas y números.
+- Los enlaces viejos siguen funcionando: `/#/pez-y-mar` pasa solo a `/pezymar`, y `/pez-y-mar` también.
 
 ## Qué se puede hacer en el panel
 
@@ -14,7 +16,7 @@ Una sola app para crear páginas de negocios: enlaces tipo Linktree, carta o cat
 - **Carta / Catálogo**
   - Categorías con foto o emoji, subcategorías (secciones) y productos.
   - Cada producto lleva precio, unidad (lb / unidad / kg), foto, agotado y oculto.
-  - **Varias cartas** por página (por ejemplo, la carta en inglés o una de bebidas). Cada una tiene su dirección (`#/pez-y-mar/english-menu`), idioma de los textos fijos (español o inglés), título y frase. En la página aparece un selector para cambiar de carta, y cada botón de tipo carta elige cuál abre. Al importar un JSON se elige a qué carta va.
+  - **Varias cartas** por página (por ejemplo, la carta en inglés o una de bebidas). Cada una tiene su dirección (`/pezymar/englishmenu`), idioma de los textos fijos (español o inglés), título y frase. En la página aparece un selector para cambiar de carta, y cada botón de tipo carta elige cuál abre. Al importar un JSON se elige a qué carta va.
 - **Perfil**: foto o logo, nombre, descripción, y título y descripción para buscadores.
 - **Diseño**, con vista previa en vivo:
   - 10 plantillas listas para usar.
@@ -44,7 +46,7 @@ npm install
 npm run dev
 ```
 
-Abre `http://localhost:5173/#/admin` y entra en **modo demo**: sin Supabase, los cambios se guardan solo en ese navegador. Trae dos páginas de ejemplo, `#/mar-adentro` y `#/brasa-y-barra`.
+Abre `http://localhost:5173/admin` y entra en **modo demo**: sin Supabase, los cambios se guardan solo en ese navegador. Trae dos páginas de ejemplo, `/maradentro` y `/brasaybarra`.
 
 Prueba completa del panel (con el servidor corriendo): `npm run e2e -- http://localhost:5173/`.
 
@@ -89,7 +91,7 @@ Queda en `https://linkbush.pages.dev`. El plan gratis tiene tráfico ilimitado, 
 - **Videos**: el plan gratis de Supabase trae unos 5 GB de descarga al mes, sumando todas las páginas. Un video de 6 MB alcanza para unas 800 visitas.
   - Usa videos de 720p y de 2 a 4 MB. El panel avisa por encima de 8 MB y no acepta más de 20 MB.
   - También puedes pegar el enlace de un video alojado en otro lugar.
-- **Vista previa al compartir**: WhatsApp muestra el título general de la app, no el de cada página, porque las direcciones van después del `#`. Se resuelve más adelante con un dominio propio (por ejemplo, en Cloudflare Pages).
+- **Vista previa al compartir**: WhatsApp muestra el título general de la app, no el de cada página, porque WhatsApp no ejecuta la app. Como las direcciones ya son reales (sin `#`), se puede resolver con una función de Cloudflare Pages que ponga el título y la foto de cada página.
 
 ## Estructura
 
@@ -97,7 +99,7 @@ Queda en `https://linkbush.pages.dev`. El plan gratis tiene tráfico ilimitado, 
 - `src/lib/tema.ts`: aplica el diseño de una página como variables CSS.
 - `src/lib/plantillas.ts`, `src/lib/fuentes.ts`, `src/lib/vocab.ts`: plantillas, fuentes y vocabulario por tipo de negocio.
 - `src/lib/paginas.ts`: crear, duplicar e importar catálogos.
-- `src/pages/SiteLayout.tsx`: la página pública (`#/<dirección>/…`).
+- `src/pages/SiteLayout.tsx`: la página pública (`/<dirección>/…`).
 - `src/pages/admin/`: el panel.
 - `supabase/schema.sql`: tablas, permisos (RLS) y almacenamiento.
 - `scripts/ejemplo-carta.json`: ejemplo del formato para importar.

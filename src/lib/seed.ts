@@ -9,7 +9,7 @@ const creada = '2026-11-01T12:00:00.000Z'
 const sites: Site[] = [
   {
     id: 's-mar',
-    slug: 'mar-adentro',
+    slug: 'maradentro',
     name: 'Mar Adentro',
     description: 'Pescados y mariscos frescos.\nAl por mayor y al detal, con domicilios.',
     avatar_url: null,
@@ -23,7 +23,7 @@ const sites: Site[] = [
   },
   {
     id: 's-brasa',
-    slug: 'brasa-y-barra',
+    slug: 'brasaybarra',
     name: 'Brasa & Barra',
     description: 'Parrilla a la leña y coctelería de autor.\nAbierto todos los días desde las 12 m.',
     avatar_url: null,

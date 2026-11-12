@@ -10,23 +10,23 @@ export const SLUGS_RESERVADOS = ['admin']
 export function slugError(slug: string, sites: Site[], except?: string): string {
   if (!slug) return 'Escribe la dirección.'
   if (slug.length < 2) return 'Usa al menos 2 letras.'
-  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) return 'Solo minúsculas, números y guiones (sin tildes ni espacios).'
+  if (!/^[a-z0-9]+$/.test(slug)) return 'Solo minúsculas y números (sin guiones, tildes ni espacios).'
   if (SLUGS_RESERVADOS.includes(slug)) return 'Esa dirección la usa el panel. Elige otra.'
   if (sites.some((s) => s.slug === slug && s.id !== except)) return 'Ya hay una página con esa dirección.'
   return ''
 }
 
-/** Una dirección libre a partir del nombre: "Pez y Mar" -> "pez-y-mar" (o "pez-y-mar-2"). */
+/** Una dirección libre a partir del nombre: "Pez y Mar" -> "pezymar" (o "pezymar2"). */
 export function slugLibre(name: string, sites: Site[]): string {
   const base = slugify(name) || 'pagina'
   let slug = base
-  for (let i = 2; slugError(slug, sites); i++) slug = `${base}-${i}`
+  for (let i = 2; slugError(slug, sites); i++) slug = `${base}${i}`
   return slug
 }
 
 /** Dirección pública completa de una página (la que va en el QR). */
 export function urlPublica(slug: string): string {
-  return `${location.origin}${location.pathname}#/${slug}`
+  return `${location.origin}/${slug}`
 }
 
 /**

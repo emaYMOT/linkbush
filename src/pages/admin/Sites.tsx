@@ -124,7 +124,7 @@ export default function Sites() {
               <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:justify-between sm:gap-3">
                 <div className="w-full min-w-0">
                   <Link to={`/admin/${site.id}`} className="sin-presion block truncate font-semibold hover:text-resalte sm:text-[1.05rem]">{site.name}</Link>
-                  <span className="block truncate text-[0.8rem] text-gris sm:text-sm">#/{site.slug}</span>
+                  <span className="block truncate text-[0.8rem] text-gris sm:text-sm">/{site.slug}</span>
                 </div>
                 <Estado published={site.published} />
               </div>
@@ -133,7 +133,7 @@ export default function Sites() {
                   Editar <ArrowRight size={16} aria-hidden className="transition-transform duration-200 group-hover/tarjeta:translate-x-0.5" />
                 </Link>
                 <div className="hidden sm:contents">
-                  <a href={`#/${site.slug}`} target="_blank" rel="noopener" aria-label={`Ver ${site.name} (otra pestaña)`} title="Ver página" className="grid size-11 place-items-center rounded-xl text-gris hover:bg-papel hover:text-tinta">
+                  <a href={`/${site.slug}`} target="_blank" rel="noopener" aria-label={`Ver ${site.name} (otra pestaña)`} title="Ver página" className="grid size-11 place-items-center rounded-xl text-gris hover:bg-papel hover:text-tinta">
                     <ExternalLink size={18} />
                   </a>
                   <RowAction label="Copiar enlace" onClick={() => copyLink(site)}><Link2 size={18} /></RowAction>
@@ -154,7 +154,7 @@ export default function Sites() {
         <Modal open title={acciones.name} onClose={() => setAcciones(null)}>
           <ul className="-mx-2 -mt-1 flex flex-col">
             <li>
-              <a href={`#/${acciones.slug}`} target="_blank" rel="noopener" onClick={() => setAcciones(null)} className={opcionHoja}>
+              <a href={`/${acciones.slug}`} target="_blank" rel="noopener" onClick={() => setAcciones(null)} className={opcionHoja}>
                 <ExternalLink size={20} aria-hidden className="text-gris" /> Ver página
               </a>
             </li>

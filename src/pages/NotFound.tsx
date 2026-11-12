@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-/** Dirección sin página (o con una página en borrador). También es la portada de la app (#/). */
+/** Dirección sin página (o con una página en borrador). También es la portada de la app (/). */
 export default function NotFound() {
   useEffect(() => {
     document.title = 'Página no encontrada'

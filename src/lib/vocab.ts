@@ -32,14 +32,13 @@ export const VOCAB_PRESETS: Record<Vocab['tipo'], Vocab> = {
   },
 }
 
-/** "Catálogo" -> "catalogo" (también sirve para la dirección de cada página). */
+/** "Catálogo" -> "catalogo", "Pez y Mar" -> "pezymar": solo minúsculas y números, sin guiones (direcciones de páginas y cartas). */
 export function slugify(text: string): string {
   return text
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/[^a-z0-9]+/g, '')
     .slice(0, 40)
 }
 
@@ -53,7 +52,7 @@ export function palabras(v: Vocab) {
   const o = pf ? 'a' : 'o'
   const uno = v.producto.uno.trim() || 'producto'
   return {
-    ruta: slugify(v.seccion) || 'carta', // /#/<slug>/<ruta>
+    ruta: slugify(v.seccion) || 'carta', // /<slug>/<ruta>
     seccion: cap(v.seccion.trim() || 'Carta'),
     el: `${f ? 'la' : 'el'} ${s}`,
     del: f ? `de la ${s}` : `del ${s}`,

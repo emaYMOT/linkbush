@@ -4,7 +4,7 @@ export type PriceUnit = 'lb' | 'unidad' | 'kg'
 /** Una página publicada (un negocio). Todo su contenido cuelga de aquí con site_id. */
 export interface Site {
   id: string
-  slug: string // dirección: /#/<slug>
+  slug: string // dirección: /<slug>
   name: string
   description: string
   avatar_url: string | null
@@ -104,7 +104,7 @@ export interface Carta {
   id: string
   site_id: string
   name: string // "English menu": se ve en el selector de cartas
-  ruta: string // /#/<slug>/<ruta>
+  ruta: string // /<slug>/<ruta>
   idioma: Idioma // textos fijos de la carta: Inicio/Home, Agotado/Sold out…
   titulo: string | null
   subtitulo: string | null

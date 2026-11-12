@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
-import { Route, Routes, useLocation, useParams } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import HeroBackground from '../components/HeroBackground'
 import Home from './Home'
 import Menu from './Menu'
@@ -19,12 +19,18 @@ import NotFound from './NotFound'
 export type MensajeVistaPrevia = { type: 'tema'; theme: Theme } | { type: 'listo' }
 
 /**
- * Todo lo que va en /#/<slug>: carga la página, aplica su diseño y deja el video corriendo
+ * Todo lo que va en /<slug>: carga la página, aplica su diseño y deja el video corriendo
  * entre el inicio y la carta. Si la página no existe o está en borrador (y no eres el admin), "no encontrada".
  */
 export default function SiteLayout() {
   const { slug = '' } = useParams()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
+  // Las direcciones ya no llevan guiones: un enlace viejo (/oh-food/carta) pasa a la nueva (/ohfood/carta).
+  if (slug.includes('-')) return <Navigate to={pathname.replace(`/${slug}`, `/${slug.replace(/-/g, '')}`) + search} replace />
+  return <Pagina slug={slug} pathname={pathname} />
+}
+
+function Pagina({ slug, pathname }: { slug: string; pathname: string }) {
   // Dentro del iframe del panel: escucha el diseño sin guardar (aunque se navegue dentro de la vista previa).
   const preview = window.parent !== window
   // Una sola consulta trae la página con sus botones y cartas; botones y cartas quedan listos en la caché.
@@ -100,7 +106,7 @@ export default function SiteLayout() {
           Borrador · solo tú la ves
         </p>
       )}
-      {/* /#/pez-y-mar, /#/pez-y-mar/catalogo y /#/pez-y-mar/catalogo/<categoría> */}
+      {/* /pezymar, /pezymar/catalogo y /pezymar/catalogo/<categoría> */}
       <Routes>
         <Route index element={<Home />} />
         <Route path=":seccion" element={<Menu />} />

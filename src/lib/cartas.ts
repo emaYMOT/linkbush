@@ -93,11 +93,11 @@ export const IDIOMAS: { value: Idioma; label: string; hint: string }[] = [
 export function rutaCartaError(ruta: string, principal: string, cartas: Carta[], except?: string): string {
   if (!ruta) return 'Escribe la dirección de la carta.'
   if (ruta.length < 2) return 'Usa al menos 2 letras.'
-  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(ruta)) return 'Solo minúsculas, números y guiones (sin tildes ni espacios).'
+  if (!/^[a-z0-9]+$/.test(ruta)) return 'Solo minúsculas y números (sin guiones, tildes ni espacios).'
   if (ruta === principal) return 'Esa es la dirección de la carta principal. Elige otra.'
   if (cartas.some((c) => c.ruta === ruta && c.id !== except)) return 'Ya hay otra carta con esa dirección.'
   return ''
 }
 
-/** Sugerencia de dirección a partir del nombre: "English menu" -> "english-menu". */
+/** Sugerencia de dirección a partir del nombre: "English menu" -> "englishmenu". */
 export const rutaSugerida = (nombre: string) => slugify(nombre)

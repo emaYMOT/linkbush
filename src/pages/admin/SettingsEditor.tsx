@@ -161,7 +161,7 @@ function VocabCard() {
         </div>
 
         <div className="grid gap-5 sm:grid-cols-[1fr_auto]">
-          <Field label="Nombre de la sección" hint={`Pestaña y dirección: …/#/${site.slug}/${m.ruta}`}>
+          <Field label="Nombre de la sección" hint={`Pestaña y dirección: …/${site.slug}/${m.ruta}`}>
             <TextInput value={draft.seccion} onChange={(e) => set({ seccion: e.target.value })} placeholder="Carta" maxLength={24} />
           </Field>
           <Opciones

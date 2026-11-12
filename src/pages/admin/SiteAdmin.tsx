@@ -109,7 +109,7 @@ export default function SiteAdmin() {
               <ChevronDown size={16} aria-hidden className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-gris" />
             </div>
             <Estado published={site.published} />
-            <a href={`#/${site.slug}`} target="_blank" rel="noopener" className="ml-auto inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-linea px-3 text-sm font-semibold hover:bg-papel">
+            <a href={`/${site.slug}`} target="_blank" rel="noopener" className="ml-auto inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-linea px-3 text-sm font-semibold hover:bg-papel">
               <ExternalLink size={16} /> <span className="hidden sm:inline">Ver página</span><span className="sr-only sm:hidden">Ver página (otra pestaña)</span>
             </a>
           </div>

@@ -10,7 +10,7 @@
 create table if not exists public.sites (
   id              uuid primary key default gen_random_uuid(),
   slug            text not null unique
-                  check (char_length(slug) between 2 and 40 and slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and slug <> 'admin'),
+                  check (char_length(slug) between 2 and 40 and slug ~ '^[a-z0-9]+$' and slug <> 'admin'),
   name            text not null check (char_length(name) between 1 and 60),
   description     text not null default '',
   avatar_url      text,
@@ -169,7 +169,7 @@ create table if not exists public.menus (
   id         uuid primary key default gen_random_uuid(),
   site_id    uuid not null references public.sites (id) on delete cascade,
   name       text not null check (char_length(name) between 1 and 40),        -- "English menu": se ve en el selector de cartas
-  ruta       text not null check (char_length(ruta) between 2 and 40 and ruta ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),  -- /#/<slug>/<ruta>
+  ruta       text not null check (char_length(ruta) between 2 and 40 and ruta ~ '^[a-z0-9]+$'),  -- /<slug>/<ruta>
   idioma     text not null default 'es' check (idioma in ('es', 'en')),      -- textos fijos de la carta (Inicio/Home, Agotado/Sold out…)
   titulo     text check (char_length(titulo) <= 60),
   subtitulo  text check (char_length(subtitulo) <= 160),
