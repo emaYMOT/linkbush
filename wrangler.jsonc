@@ -1,0 +1,11 @@
+// Publicación en Cloudflare (Workers con archivos estáticos, plan gratis).
+// Cloudflare corre `npm run build` y luego `npx wrangler deploy`, que sube la carpeta dist.
+// public/_headers (tiempos de caché) también se respeta aquí.
+// El "name" debe ser igual al nombre del proyecto en el panel de Cloudflare.
+{
+  "name": "link-bush",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}

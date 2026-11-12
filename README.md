@@ -69,14 +69,14 @@ El workflow `keepalive.yml` consulta la base cada 3 días, para que el plan grat
 
 Cloudflare publica el mismo repositorio con cada `git push`, igual que GitHub Pages. Además respeta `public/_headers`, que deja guardados en el celular las fotos (30 días), los videos (1 día) y el código, en vez de solo 10 minutos.
 
-1. En dash.cloudflare.com: **Workers & Pages → Create → Pages → Connect to Git** y elige este repositorio.
-2. Configuración de compilación:
-   - Framework preset: *None*.
+1. En dash.cloudflare.com: **Workers & Pages → Create → Import a repository** y elige este repositorio.
+2. Configuración:
+   - Project name: `link-bush`. Debe ser igual al `name` de `wrangler.jsonc`.
    - Build command: `npm run build`.
-   - Build output directory: `dist`.
-3. Variables de entorno: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (la publicable) y `NODE_VERSION` = `22`.
+   - Deploy command: `npx wrangler deploy`. Sube `dist` según `wrangler.jsonc`.
+3. En **Advanced settings → Build variables** agrega `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (la publicable) y `NODE_VERSION` = `22`. Tienen que ser variables de *build*: la app las necesita al compilar.
 
-Queda en `https://<proyecto>.pages.dev`. El plan gratis permite tráfico ilimitado, 500 publicaciones al mes y hasta 20.000 archivos de máximo 25 MB cada uno.
+Queda en `https://link-bush.<tu-subdominio>.workers.dev`. Servir archivos estáticos es gratis y sin límite de visitas; cada versión admite hasta 20.000 archivos de máximo 25 MB.
 
 ## Límites a tener en cuenta
 
