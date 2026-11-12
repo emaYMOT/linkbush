@@ -7,10 +7,11 @@ import MenuCategory from './MenuCategory'
 import { cartaPrincipal, cartaPublica } from '../lib/cartas'
 import { bySort } from '../lib/format'
 import { SiteProvider } from '../lib/sitio'
-import { store } from '../lib/store'
+import { esperarLoPrincipal } from '../lib/medios'
+import { loadPublicMenu, store } from '../lib/store'
 import { aplicarTema } from '../lib/tema'
 import type { Theme } from '../lib/types'
-import { useCached } from '../lib/useCached'
+import { prefetch, primeCache, useCached } from '../lib/useCached'
 import { palabras } from '../lib/vocab'
 import NotFound from './NotFound'
 
@@ -26,7 +27,18 @@ export default function SiteLayout() {
   const { pathname } = useLocation()
   // Dentro del iframe del panel: escucha el diseño sin guardar (aunque se navegue dentro de la vista previa).
   const preview = window.parent !== window
-  const { data: site, error } = useCached(`site:${slug}`, () => store.getSiteBySlug(slug))
+  // Una sola consulta trae la página con sus botones y cartas; botones y cartas quedan listos en la caché.
+  const { data: site, error } = useCached(`site:${slug}`, async () => {
+    // Si la consulta combinada fallara, se cae a la de siempre (solo la página; botones y cartas se piden aparte).
+    const p = await store.getPublicSite(slug).catch((e) => {
+      console.warn('Consulta combinada falló, se usa la normal:', e)
+      return store.getSiteBySlug(slug).then((s) => (s ? { site: s, links: null, menus: null } : null))
+    })
+    if (!p) return null
+    if (p.links) primeCache(`links:${p.site.id}`, p.links.filter((l) => l.is_active).sort(bySort))
+    if (p.menus) primeCache(`menus:${p.site.id}`, p.menus.filter((c) => c.is_active).sort(bySort))
+    return p.site
+  })
   // Las cartas adicionales (inglés, bebidas…). Si fallan, la principal sigue funcionando.
   const { data: menus, error: menusError } = useCached(`menus:${site?.id ?? slug}`, async () =>
     site ? (await store.list('menus', site.id)).filter((c) => c.is_active).sort(bySort) : undefined,
@@ -46,6 +58,17 @@ export default function SiteLayout() {
   const theme = previewTheme ?? site?.theme ?? null
   useLayoutEffect(() => aplicarTema(theme), [theme])
   useEffect(() => () => aplicarTema(null), [])
+
+  // Cuando ya se ve el inicio, la carta principal se pide por adelantado: al tocarla, abre al instante.
+  const siteId = site?.id
+  useEffect(() => {
+    if (!siteId) return
+    let alive = true
+    esperarLoPrincipal().then(() => alive && prefetch(`menu:${siteId}:principal`, () => loadPublicMenu(siteId, null)))
+    return () => {
+      alive = false
+    }
+  }, [siteId])
 
   useEffect(() => {
     if (!site) return

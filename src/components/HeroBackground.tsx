@@ -1,4 +1,5 @@
-import { useId, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useMemo, useState, type CSSProperties } from 'react'
+import { esperarLoPrincipal, videoLiviano } from '../lib/medios'
 import type { Efecto, Theme } from '../lib/types'
 
 /**
@@ -26,21 +27,34 @@ export default function HeroBackground({ theme, dim = false }: { theme: Theme; d
   )
 }
 
+/**
+ * El video empieza a bajar cuando ya se ve lo principal (logo, botones, primeras fotos): mientras, se ve el efecto.
+ * En celular usa la versión liviana si existe; si esa falla, prueba la original.
+ */
 function Video({ src }: { src: string }) {
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
-  if (failed) return null
+  const [start, setStart] = useState(false)
+  const [actual, setActual] = useState(() => (matchMedia('(max-width: 767px)').matches ? videoLiviano(src) : src))
+  useEffect(() => {
+    let alive = true
+    esperarLoPrincipal().then(() => alive && setStart(true))
+    return () => {
+      alive = false
+    }
+  }, [])
+  if (failed || !start) return null
   return (
     <video
       className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${ready ? 'opacity-100' : 'opacity-0'}`}
-      src={src}
+      src={actual}
       autoPlay
       muted
       loop
       playsInline
       preload="auto"
       onPlaying={() => setReady(true)}
-      onError={() => setFailed(true)}
+      onError={() => (actual !== src ? setActual(src) : setFailed(true))}
     />
   )
 }

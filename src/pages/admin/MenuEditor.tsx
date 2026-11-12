@@ -6,6 +6,7 @@ import ImageUpload from '../../components/ImageUpload'
 import Modal, { Button, CancelButton, ConfirmDialog } from '../../components/Modal'
 import SortableList, { MoveControls, moveInList, RowAction } from '../../components/SortableList'
 import { Switch } from '../../components/Toggle'
+import { alOriginal, miniatura } from '../../lib/medios'
 import type { Carta, Category, Draft } from '../../lib/types'
 import { EmptyState, PageTitle } from './AdminApp'
 import { cartaNueva, CartaForm, SelectorCartas } from './Cartas'
@@ -71,7 +72,7 @@ export default function MenuEditor() {
               <>
                 <Link to={`${base}/catalogo/${category.id}`} title={category.name} className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-1 transition-colors hover:bg-papel">
                   {category.image_url ? (
-                    <img src={category.image_url} alt="" className="size-11 shrink-0 rounded-xl object-cover" />
+                    <img src={miniatura(category.image_url)} onError={alOriginal(category.image_url)} alt="" loading="lazy" className="size-11 shrink-0 rounded-xl object-cover" />
                   ) : (
                     <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-papel text-xl">{category.emoji || '🍽️'}</span>
                   )}

@@ -34,6 +34,12 @@ export interface StoredFile {
   created_at: string
 }
 
+export interface PublicSite {
+  site: Site
+  links: LinkButton[]
+  menus: Carta[]
+}
+
 export interface AdminSession {
   email: string
 }
@@ -49,6 +55,8 @@ export interface DataStore {
   listSites(): Promise<Site[]>
   getSite(id: string): Promise<Site | null>
   getSiteBySlug(slug: string): Promise<Site | null>
+  /** Lo que necesita la vista pública para empezar (página, botones y cartas), en una sola consulta. */
+  getPublicSite(slug: string): Promise<PublicSite | null>
   createSite(site: NewSite): Promise<Site>
   updateSite(id: string, patch: Partial<NewSite>): Promise<Site>
   removeSite(id: string): Promise<void>
@@ -71,9 +79,18 @@ export interface DataStore {
 // La librería de compresión solo se descarga al subir la primera foto (la página pública nunca la necesita).
 const compresor = () => import('browser-image-compression').then((m) => m.default)
 
-async function compress(file: File, maxSide: number): Promise<File> {
+async function compress(file: File, maxSide: number, maxSizeMB = 0.35): Promise<File> {
   const imageCompression = await compresor()
-  return imageCompression(file, { maxSizeMB: 0.35, maxWidthOrHeight: maxSide, fileType: 'image/webp', useWebWorker: true })
+  return imageCompression(file, { maxSizeMB, maxWidthOrHeight: maxSide, fileType: 'image/webp', useWebWorker: true })
+}
+
+/** Miniatura: el lado corto queda en 360 px (nunca más grande que la foto), igual que scripts/medios-livianos.mjs. */
+async function compressMiniatura(file: File): Promise<File> {
+  const bmp = await createImageBitmap(file)
+  const largo = Math.max(bmp.width, bmp.height)
+  const corto = Math.min(bmp.width, bmp.height)
+  bmp.close()
+  return compress(file, Math.min(largo, Math.round((360 * largo) / corto)), 0.06)
 }
 
 const now = () => new Date().toISOString()
@@ -113,6 +130,19 @@ function supabaseStore(client: SupabaseClient): DataStore {
       const { data, error } = await client.from('sites').select('*').eq('slug', slug).maybeSingle()
       fail(error)
       return completa(data as Site | null)
+    },
+
+    async getPublicSite(slug) {
+      // Botones y cartas vienen dentro de la página (se nombra la relación porque links también apunta a menus).
+      const { data, error } = await client
+        .from('sites')
+        .select('*, links!links_site_id_fkey(*), menus!menus_site_id_fkey(*)')
+        .eq('slug', slug)
+        .maybeSingle()
+      fail(error)
+      if (!data) return null
+      const { links, menus, ...site } = data as Site & { links: LinkButton[]; menus: Carta[] }
+      return { site: completa(site as Site), links, menus }
     },
 
     async createSite(site) {
@@ -171,7 +201,16 @@ function supabaseStore(client: SupabaseClient): DataStore {
 
     async uploadImage(file, siteId, folder) {
       const small = await compress(file, MAX_SIDE[folder][0])
-      return upload(`${siteId}/${folder}/${crypto.randomUUID()}.webp`, small, 'image/webp')
+      // Junto a la foto va su miniatura ("-m"), la que usan la carta y el panel en los cuadritos (ver lib/medios.ts).
+      // El "-o" del nombre avisa que la tiene. Si la miniatura falla, la foto sigue sirviendo sola.
+      const id = crypto.randomUUID()
+      const url = await upload(`${siteId}/${folder}/${id}-o.webp`, small, 'image/webp')
+      try {
+        await upload(`${siteId}/${folder}/${id}-m.webp`, await compressMiniatura(small), 'image/webp')
+      } catch (e) {
+        console.warn('No se pudo guardar la miniatura:', e)
+      }
+      return url
     },
 
     async uploadVideo(file, siteId) {
@@ -287,6 +326,12 @@ function demoStore(): DataStore {
       const data = read()
       const site = data.sites.find((s) => s.slug === slug)
       return delay(completa(site && (site.published || data.session) ? site : null))
+    },
+    async getPublicSite(slug) {
+      const data = read()
+      const site = data.sites.find((s) => s.slug === slug)
+      if (!site || !(site.published || data.session)) return delay(null)
+      return delay({ site: completa(site), links: data.links.filter((l) => l.site_id === site.id), menus: data.menus.filter((c) => c.site_id === site.id) })
     },
 
     async createSite(site) {

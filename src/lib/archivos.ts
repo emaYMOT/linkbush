@@ -1,3 +1,4 @@
+import { rutaMiniatura } from './medios'
 import { store, type StoredFile } from './store'
 
 /**
@@ -23,7 +24,11 @@ async function rutasEnUso(excluir?: string): Promise<Set<string>> {
   const usadas = new Set<string>()
   const add = (url: string | null | undefined) => {
     const ruta = rutaDeUrl(url)
-    if (ruta) usadas.add(ruta)
+    if (!ruta) return
+    usadas.add(ruta)
+    // Su miniatura va con ella: se conserva mientras la foto se use y se borra cuando la foto sobra.
+    const mini = rutaMiniatura(ruta)
+    if (mini) usadas.add(mini)
   }
   for (const s of sites) {
     add(s.avatar_url)

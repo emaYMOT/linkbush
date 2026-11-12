@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import CategoryCover from '../components/CategoryCover'
 import { formatPrice, UNITS } from '../lib/format'
+import { alOriginal, miniatura } from '../lib/medios'
 import type { TextosCarta } from '../lib/cartas'
 import { useCartaActual, useSite } from '../lib/sitio'
 import { loadPublicMenu, type MenuSection, type PublicCategory } from '../lib/store'
@@ -157,7 +158,7 @@ function ItemCard({ item, nested, t }: { item: MenuItem; nested: boolean; t: Tex
         {!item.is_available && <span className="etiqueta mt-2 inline-block text-grafiti">{t.agotado}</span>}
       </div>
       {item.image_url && (
-        <img src={item.image_url} alt="" loading="lazy" width={112} height={112} className={`size-24 shrink-0 rounded-xl object-cover sm:size-28 ${item.is_available ? '' : 'opacity-50 grayscale'}`} />
+        <img src={miniatura(item.image_url)} onError={alOriginal(item.image_url)} alt="" loading="lazy" decoding="async" width={112} height={112} className={`size-24 shrink-0 rounded-xl object-cover sm:size-28 ${item.is_available ? '' : 'opacity-50 grayscale'}`} />
       )}
     </li>
   )
