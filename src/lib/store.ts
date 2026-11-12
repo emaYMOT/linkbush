@@ -93,6 +93,28 @@ async function compressMiniatura(file: File): Promise<File> {
   return compress(file, Math.min(largo, Math.round((360 * largo) / corto)), 0.06)
 }
 
+/**
+ * Foto para compartir (WhatsApp, Instagram…): cuadrada, recortada al centro, de hasta 600 px y en JPG,
+ * porque WhatsApp no siempre muestra WebP. La usa functions/[[path]].js.
+ */
+async function jpgCompartir(file: File): Promise<File> {
+  const bmp = await createImageBitmap(file)
+  const lado = Math.min(bmp.width, bmp.height)
+  const final = Math.min(600, lado)
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = final
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Sin canvas')
+  // Fondo blanco: un logo PNG con transparencia no queda negro en JPG.
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(0, 0, final, final)
+  ctx.drawImage(bmp, (bmp.width - lado) / 2, (bmp.height - lado) / 2, lado, lado, 0, 0, final, final)
+  bmp.close()
+  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.82))
+  if (!blob) throw new Error('No se pudo crear el JPG')
+  return new File([blob], 'compartir.jpg', { type: 'image/jpeg' })
+}
+
 const now = () => new Date().toISOString()
 
 /** Toda página leída sale con su diseño completo (las guardadas antes no traen las opciones nuevas). */
@@ -209,6 +231,14 @@ function supabaseStore(client: SupabaseClient): DataStore {
         await upload(`${siteId}/${folder}/${id}-m.webp`, await compressMiniatura(small), 'image/webp')
       } catch (e) {
         console.warn('No se pudo guardar la miniatura:', e)
+      }
+      // La foto de perfil lleva además su JPG para compartir ("-c"). Si falla, se comparte la foto tal cual.
+      if (folder === 'avatar') {
+        try {
+          await upload(`${siteId}/${folder}/${id}-c.jpg`, await jpgCompartir(file), 'image/jpeg')
+        } catch (e) {
+          console.warn('No se pudo guardar la foto para compartir:', e)
+        }
       }
       return url
     },

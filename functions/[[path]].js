@@ -30,12 +30,7 @@ export async function onRequestGet(context) {
 
   const titulo = site.seo_title || site.name
   const descripcion = (site.seo_description || site.description || '').replace(/\s+/g, ' ').trim().slice(0, 200)
-  // Primero el JPG para compartir (scripts/fotos-compartir.mjs); si no hay, la foto de perfil tal cual.
-  const jpg = new URL(`/media/compartir/${site.slug}.jpg`, url.origin)
-  const hayJpg = await env.ASSETS.fetch(jpg, { method: 'HEAD' })
-    .then((r) => r.ok && (r.headers.get('content-type') || '').startsWith('image/'))
-    .catch(() => false)
-  const imagen = hayJpg ? jpg.href : site.avatar_url ? new URL(site.avatar_url, url.origin).href : ''
+  const imagen = await fotoParaCompartir(env, site, url.origin)
   const canonica = `${url.origin}/${site.slug}`
 
   const etiquetas = [
@@ -76,6 +71,26 @@ async function buscarPagina(env, slug) {
   if (!r.ok) throw new Error(`Supabase ${r.status}`)
   const filas = await r.json()
   return filas[0] || null
+}
+
+/**
+ * La foto que se muestra al compartir, en este orden:
+ * 1. El JPG que el panel guarda al subir la foto de perfil (<id>-o.webp → <id>-c.jpg): siempre es de la foto actual.
+ * 2. El JPG del repositorio, public/media/compartir/<dirección>.jpg (scripts/fotos-compartir.mjs).
+ * 3. La foto de perfil tal cual.
+ */
+async function fotoParaCompartir(env, site, origen) {
+  if (!site.avatar_url) return ''
+  const avatar = new URL(site.avatar_url, origen).href
+  const esImagen = (r) => r.ok && (r.headers.get('content-type') || '').startsWith('image/')
+  if (/-o\.webp$/.test(avatar)) {
+    const delPanel = avatar.replace(/-o\.webp$/, '-c.jpg')
+    const ok = await fetch(delPanel, { method: 'HEAD', cf: { cacheTtl: 300, cacheEverything: true } }).then(esImagen).catch(() => false)
+    if (ok) return delPanel
+  }
+  const delRepo = new URL(`/media/compartir/${site.slug}.jpg`, origen)
+  const ok = await env.ASSETS.fetch(delRepo, { method: 'HEAD' }).then(esImagen).catch(() => false)
+  return ok ? delRepo.href : avatar
 }
 
 function escapar(texto) {

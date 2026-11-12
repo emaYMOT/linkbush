@@ -7,6 +7,7 @@ import type { SyntheticEvent } from 'react'
  * - Las que viven en la app (…/media/fotos/<slug>/<código>.webp) tienen al lado <código>-m.webp
  *   (las genera scripts/medios-livianos.mjs).
  * - Las que se suben desde el panel se guardan como <id>-o.webp con su <id>-m.webp al lado.
+ *   La foto de perfil lleva además <id>-c.jpg, la que muestra WhatsApp al compartir (functions/[[path]].js).
  * - Las subidas antes de esto no tienen miniatura: se usa la original.
  * Si una miniatura no carga, la foto vuelve sola a la original (alOriginal).
  *
@@ -33,6 +34,9 @@ export const alOriginal = (original: string | null) => (e: SyntheticEvent<HTMLIm
 
 /** Ruta de la miniatura de una foto subida desde el panel ("<id>-o.webp" → "<id>-m.webp"), o null si no tiene. */
 export const rutaMiniatura = (ruta: string) => (FOTO_PANEL.test(ruta) ? ruta.replace(FOTO_PANEL, '-m.webp') : null)
+
+/** Ruta del JPG para compartir de una foto de perfil subida desde el panel ("<id>-o.webp" → "<id>-c.jpg"), o null. */
+export const rutaCompartir = (ruta: string) => (FOTO_PANEL.test(ruta) ? ruta.replace(FOTO_PANEL, '-c.jpg') : null)
 
 /** La versión liviana del video si existe (solo los videos de la app la tienen). */
 export const videoLiviano = (url: string) => (VIDEO_APP.test(url) && !url.endsWith('-m.mp4') ? url.replace(/\.mp4$/, '-m.mp4') : url)
