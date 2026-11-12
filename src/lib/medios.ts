@@ -44,7 +44,11 @@ export const videoLiviano = (url: string) => (VIDEO_APP.test(url) && !url.endsWi
 export function esperarLoPrincipal(maxMs = 2500): Promise<void> {
   const cargada = document.readyState === 'complete' ? Promise.resolve() : new Promise<void>((r) => addEventListener('load', () => r(), { once: true }))
   // Un cuadro después, para que ya estén en pantalla las fotos que React acaba de poner.
-  const pintado = () => new Promise<void>((r) => requestAnimationFrame(() => setTimeout(r, 0)))
+  // (Con tope de 100 ms: hay navegadores que no dan cuadros a una pestaña que no está al frente.)
+  const pintado = () => new Promise<void>((r) => {
+    requestAnimationFrame(() => setTimeout(r, 0))
+    setTimeout(r, 100)
+  })
   return cargada.then(pintado).then(() => {
     const pendientes = [...document.images].filter((i) => i.loading !== 'lazy' && !i.complete)
     const fotos = Promise.all(pendientes.map((i) => new Promise((r) => { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }) })))
