@@ -42,7 +42,7 @@ export default function Muestra({ theme, titulo, compacta, avatar, className = '
   return (
     <div
       aria-hidden
-      className={`relative flex flex-col items-center justify-center overflow-hidden px-3 py-3 text-center ${className}`}
+      className={`relative flex flex-col items-center justify-center overflow-hidden px-3 py-3 text-center [container-type:inline-size] ${className}`}
       style={{ background: `radial-gradient(90% 60% at 85% 0%, ${c.acento}55, transparent 70%), ${c.fondo}`, color: c.texto }}
     >
       {/* Como en la página real: la foto arriba, luego el nombre y los botones. */}
@@ -54,7 +54,7 @@ export default function Muestra({ theme, titulo, compacta, avatar, className = '
           {avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : titulo.trim().charAt(0).toUpperCase()}
         </span>
       )}
-      <span className="block w-full truncate leading-tight" style={{ fontFamily: pilaDe(theme.fuentes.titulos), fontWeight: theme.fuentes.pesoTitulos, fontSize: compacta ? '1.05rem' : '1.35rem' }}>
+      <span className="block w-full truncate leading-tight" style={{ fontFamily: pilaDe(theme.fuentes.titulos), fontWeight: theme.fuentes.pesoTitulos, fontSize: compacta ? '1.05rem' : 'clamp(1rem, 9cqi, 1.35rem)' }}>
         {titulo}
       </span>
       <span className="mt-1 block text-[0.7rem]" style={{ fontFamily: pilaDe(theme.fuentes.textos), color: c.textoSuave, fontWeight: theme.fuentes.pesoTextos }}>

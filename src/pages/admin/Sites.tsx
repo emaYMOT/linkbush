@@ -1,7 +1,7 @@
-import { ArrowRight, Copy, ExternalLink, Link2, Plus, QrCode, Shrub, Store, Trash2, UtensilsCrossed } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowRight, Copy, Ellipsis, ExternalLink, Link2, Plus, QrCode, Search, SearchX, Shrub, Store, Trash2, UtensilsCrossed, X } from 'lucide-react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import toast from 'react-hot-toast'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Field, focusFirstInvalid, TextInput } from '../../components/Field'
 import Modal, { Button, CancelButton } from '../../components/Modal'
 import { RowAction } from '../../components/SortableList'
@@ -17,11 +17,24 @@ import Muestra, { SelectorTemasColor } from './Muestra'
 
 type Accion = { tipo: 'qr' | 'duplicar' | 'eliminar'; site: Site }
 
+/** Para buscar sin importar tildes ni mayúsculas: "Pizzería" se encuentra con "pizzeria". */
+const normalizar = (texto: string) => texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
+
 /** "Mis páginas": todas las páginas, y el botón para crear una nueva. */
 export default function Sites() {
   const { sites } = useAdmin()
   const [creating, setCreating] = useState(false)
   const [accion, setAccion] = useState<Accion | null>(null)
+  // En celular, las acciones de cada tarjeta van en una hoja (no caben en media pantalla).
+  const [acciones, setAcciones] = useState<Site | null>(null)
+  // La búsqueda queda en la dirección (?buscar=…): al volver de editar una página sigue filtrada.
+  const [params, setParams] = useSearchParams()
+  const busqueda = params.get('buscar') ?? ''
+  const setBusqueda = (valor: string) => setParams(valor ? { buscar: valor } : {}, { replace: true })
+  const visibles = useMemo(() => {
+    const q = normalizar(busqueda)
+    return q ? sites?.filter((s) => normalizar(`${s.name} ${s.slug}`).includes(q)) : sites
+  }, [sites, busqueda])
 
   // Las miniaturas usan las fuentes de cada página (solo las letras de sus nombres).
   useEffect(() => {
@@ -56,47 +69,121 @@ export default function Sites() {
 
       {/* Mientras llegan las páginas, la forma de las tarjetas (nada salta al cargar). */}
       {!sites && (
-        <div aria-busy="true" aria-label="Cargando páginas" className="grid animate-pulse gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[0, 1, 2].map((i) => <div key={i} className="h-72 rounded-[1.4rem] bg-linea/50" />)}
+        <div aria-busy="true" aria-label="Cargando páginas" className="grid animate-pulse grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+          {[0, 1, 2].map((i) => <div key={i} className="h-64 rounded-[1.1rem] bg-linea/50 sm:h-72 sm:rounded-[1.4rem]" />)}
         </div>
       )}
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {sites?.map((site) => (
-          <li key={site.id} className="group/tarjeta sombra-panel flex flex-col overflow-hidden rounded-[1.4rem] border border-linea bg-superficie transition-[box-shadow,border-color] duration-200 hover:border-tinta/15 hover:shadow-[0_12px_32px_-14px_rgb(16_24_40/.25)]">
-            <Link to={`/admin/${site.id}`} className="presion-suave block p-2 pb-0" aria-label={`Editar ${site.name}`}>
-              <Muestra theme={site.theme} titulo={site.name} avatar={site.avatar_url} className="aspect-[16/10] rounded-[1rem]" />
+      {!!sites?.length && (
+        <div className="relative mb-4 sm:mb-5 sm:max-w-sm">
+          <Search size={18} aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-gris" />
+          <TextInput
+            type="search"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && busqueda) {
+                e.preventDefault()
+                setBusqueda('')
+              }
+            }}
+            placeholder="Buscar por nombre"
+            aria-label="Buscar páginas por nombre"
+            autoComplete="off"
+            enterKeyHint="search"
+            className="pr-11 pl-10 [&::-webkit-search-cancel-button]:hidden"
+          />
+          {busqueda && (
+            <button type="button" onClick={() => setBusqueda('')} aria-label="Borrar búsqueda" className="absolute top-1/2 right-1 grid size-10 -translate-y-1/2 place-items-center rounded-lg text-gris hover:text-tinta">
+              <X size={18} aria-hidden />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Para lectores de pantalla: cuántas quedan al filtrar. */}
+      <p className="sr-only" aria-live="polite">
+        {busqueda && visibles ? `${visibles.length} ${visibles.length === 1 ? 'página' : 'páginas'}` : ''}
+      </p>
+
+      {busqueda && visibles?.length === 0 && (
+        <EmptyState icon={<SearchX size={22} />} action={<Button onClick={() => setBusqueda('')}>Ver todas</Button>}>
+          <p className="font-semibold text-tinta">Ninguna página coincide con «{busqueda}»</p>
+          <p className="mt-1 text-sm">Revisa cómo está escrito o prueba con una parte del nombre.</p>
+        </EmptyState>
+      )}
+
+      {/* Dos columnas también en celular: se ven más páginas de un vistazo. */}
+      <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+        {visibles?.map((site) => (
+          <li key={site.id} className="group/tarjeta sombra-panel flex min-w-0 flex-col overflow-hidden rounded-[1.1rem] border border-linea bg-superficie transition-[box-shadow,border-color] duration-200 hover:border-tinta/15 hover:shadow-[0_12px_32px_-14px_rgb(16_24_40/.25)] sm:rounded-[1.4rem]">
+            <Link to={`/admin/${site.id}`} className="presion-suave block p-1.5 pb-0 sm:p-2 sm:pb-0" aria-label={`Editar ${site.name}`}>
+              <Muestra theme={site.theme} titulo={site.name} avatar={site.avatar_url} className="aspect-[4/5] rounded-[0.8rem] sm:aspect-[16/10] sm:rounded-[1rem]" />
             </Link>
-            <div className="flex flex-1 flex-col gap-3 px-4 pt-3.5 pb-2">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <Link to={`/admin/${site.id}`} className="sin-presion block truncate text-[1.05rem] font-semibold hover:text-resalte">{site.name}</Link>
-                  <span className="block truncate text-sm text-gris">#/{site.slug}</span>
+            <div className="flex flex-1 flex-col gap-2 px-3 pt-2.5 pb-1.5 sm:gap-3 sm:px-4 sm:pt-3.5 sm:pb-2">
+              <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:justify-between sm:gap-3">
+                <div className="w-full min-w-0">
+                  <Link to={`/admin/${site.id}`} className="sin-presion block truncate font-semibold hover:text-resalte sm:text-[1.05rem]">{site.name}</Link>
+                  <span className="block truncate text-[0.8rem] text-gris sm:text-sm">#/{site.slug}</span>
                 </div>
                 <Estado published={site.published} />
               </div>
-              <div className="mt-auto -mx-2 flex flex-wrap items-center gap-0.5 border-t border-linea pt-1.5">
-                <Link to={`/admin/${site.id}`} className="mr-auto inline-flex min-h-11 items-center gap-1 rounded-xl px-3 font-semibold hover:bg-papel">
+              <div className="mt-auto -mx-1.5 flex items-center gap-0.5 border-t border-linea pt-1 sm:-mx-2 sm:flex-wrap sm:pt-1.5">
+                <Link to={`/admin/${site.id}`} className="mr-auto inline-flex min-h-11 items-center gap-1 rounded-xl px-2 font-semibold hover:bg-papel sm:px-3">
                   Editar <ArrowRight size={16} aria-hidden className="transition-transform duration-200 group-hover/tarjeta:translate-x-0.5" />
                 </Link>
-                <a href={`#/${site.slug}`} target="_blank" rel="noopener" aria-label={`Ver ${site.name} (otra pestaña)`} title="Ver página" className="grid size-11 place-items-center rounded-xl text-gris hover:bg-papel hover:text-tinta">
-                  <ExternalLink size={18} />
-                </a>
-                <RowAction label="Copiar enlace" onClick={() => copyLink(site)}><Link2 size={18} /></RowAction>
-                <RowAction label="Código QR" onClick={() => setAccion({ tipo: 'qr', site })}><QrCode size={18} /></RowAction>
-                <RowAction label="Duplicar" onClick={() => setAccion({ tipo: 'duplicar', site })}><Copy size={18} /></RowAction>
-                <RowAction danger label="Eliminar" onClick={() => setAccion({ tipo: 'eliminar', site })}><Trash2 size={18} /></RowAction>
+                <div className="hidden sm:contents">
+                  <a href={`#/${site.slug}`} target="_blank" rel="noopener" aria-label={`Ver ${site.name} (otra pestaña)`} title="Ver página" className="grid size-11 place-items-center rounded-xl text-gris hover:bg-papel hover:text-tinta">
+                    <ExternalLink size={18} />
+                  </a>
+                  <RowAction label="Copiar enlace" onClick={() => copyLink(site)}><Link2 size={18} /></RowAction>
+                  <RowAction label="Código QR" onClick={() => setAccion({ tipo: 'qr', site })}><QrCode size={18} /></RowAction>
+                  <RowAction label="Duplicar" onClick={() => setAccion({ tipo: 'duplicar', site })}><Copy size={18} /></RowAction>
+                  <RowAction danger label="Eliminar" onClick={() => setAccion({ tipo: 'eliminar', site })}><Trash2 size={18} /></RowAction>
+                </div>
+                <div className="sm:hidden">
+                  <RowAction label={`Más acciones de ${site.name}`} onClick={() => setAcciones(site)}><Ellipsis size={20} /></RowAction>
+                </div>
               </div>
             </div>
           </li>
         ))}
       </ul>
 
+      {acciones && (
+        <Modal open title={acciones.name} onClose={() => setAcciones(null)}>
+          <ul className="-mx-2 -mt-1 flex flex-col">
+            <li>
+              <a href={`#/${acciones.slug}`} target="_blank" rel="noopener" onClick={() => setAcciones(null)} className={opcionHoja}>
+                <ExternalLink size={20} aria-hidden className="text-gris" /> Ver página
+              </a>
+            </li>
+            <OpcionHoja icon={<Link2 size={20} />} onClick={() => { copyLink(acciones); setAcciones(null) }}>Copiar enlace</OpcionHoja>
+            <OpcionHoja icon={<QrCode size={20} />} onClick={() => { setAccion({ tipo: 'qr', site: acciones }); setAcciones(null) }}>Código QR</OpcionHoja>
+            <OpcionHoja icon={<Copy size={20} />} onClick={() => { setAccion({ tipo: 'duplicar', site: acciones }); setAcciones(null) }}>Duplicar</OpcionHoja>
+            <OpcionHoja danger icon={<Trash2 size={20} />} onClick={() => { setAccion({ tipo: 'eliminar', site: acciones }); setAcciones(null) }}>Eliminar</OpcionHoja>
+          </ul>
+        </Modal>
+      )}
+
       {creating && sites && <NewSiteForm sites={sites} onClose={() => setCreating(false)} />}
       {accion?.tipo === 'qr' && <QrDialog site={accion.site} onClose={() => setAccion(null)} />}
       {accion?.tipo === 'duplicar' && <DuplicateDialog site={accion.site} onClose={() => setAccion(null)} />}
       {accion?.tipo === 'eliminar' && <DeleteSiteDialog site={accion.site} onClose={() => setAccion(null)} />}
     </main>
+  )
+}
+
+const opcionHoja = 'flex min-h-13 w-full items-center gap-3.5 rounded-xl px-3 text-left text-[1.05rem] font-medium hover:bg-papel active:bg-papel'
+
+function OpcionHoja({ icon, onClick, danger, children }: { icon: ReactNode; onClick: () => void; danger?: boolean; children: ReactNode }) {
+  return (
+    <li>
+      <button type="button" onClick={onClick} className={`${opcionHoja} ${danger ? 'text-peligro' : ''}`}>
+        <span aria-hidden className={danger ? '' : 'text-gris'}>{icon}</span>
+        {children}
+      </button>
+    </li>
   )
 }
 
