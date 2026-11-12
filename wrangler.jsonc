@@ -1,0 +1,14 @@
+// Publicación en Cloudflare (Workers con archivos estáticos, plan gratis).
+// Con cada push, Cloudflare corre `npm run build` y luego `npx wrangler deploy`, que sube la carpeta dist.
+// public/_headers (tiempos de caché) también se respeta aquí.
+// "name" tiene que ser igual al nombre del proyecto en Cloudflare.
+// Las llaves de Supabase van en Cloudflare: Settings → Build → Variables and secrets (de build, no de runtime).
+{
+  "name": "linkbush",
+  "compatibility_date": "2025-09-01",
+  // Activa la dirección linkbush.<subdominio>.workers.dev.
+  "workers_dev": true,
+  "assets": {
+    "directory": "./dist"
+  }
+}
