@@ -1,0 +1,20 @@
+{
+  "colores": {
+    "a": "#FE8B20",
+    "b": "#ffb35c",
+    "tinte": "#FE8B20",
+    "fondo": "#1C1917"
+  },
+  "tomas": [
+    { "src": "marcas/bunkerc13/01.jpg" },
+    { "src": "marcas/bunkerc13/02.jpg" },
+    { "src": "marcas/bunkerc13/03.jpg" },
+    { "src": "marcas/bunkerc13/04.jpg" },
+    { "src": "marcas/bunkerc13/05.jpg" },
+    { "src": "marcas/bunkerc13/06.jpg" },
+    { "src": "marcas/bunkerc13/07.jpg" },
+    { "src": "marcas/bunkerc13/08.jpg" }
+  ],
+  "particulas": "chispas",
+  "semilla": "bunkerc13"
+}
