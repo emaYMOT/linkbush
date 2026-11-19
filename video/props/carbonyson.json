@@ -1,0 +1,15 @@
+{
+  "colores": { "a": "#ef5a2f", "b": "#ff8550", "tinte": "#4a1408", "fondo": "#120a08" },
+  "tomas": [
+    { "src": "marcas/carbonyson/01.jpg" },
+    { "src": "marcas/carbonyson/02.jpg" },
+    { "src": "marcas/carbonyson/03.jpg" },
+    { "src": "marcas/carbonyson/04.jpg" },
+    { "src": "marcas/carbonyson/05.jpg" },
+    { "src": "marcas/carbonyson/06.jpg" },
+    { "src": "marcas/carbonyson/07.jpg" },
+    { "src": "marcas/carbonyson/08.jpg" }
+  ],
+  "particulas": "chispas",
+  "semilla": "carbonyson"
+}
