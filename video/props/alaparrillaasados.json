@@ -1,0 +1,15 @@
+{
+  "colores": { "a": "#f5881f", "b": "#ffb347", "tinte": "#c94b12", "fondo": "#120b08" },
+  "tomas": [
+    { "src": "marcas/alaparrillaasados/01.jpg" },
+    { "src": "marcas/alaparrillaasados/02.jpg" },
+    { "src": "marcas/alaparrillaasados/03.jpg" },
+    { "src": "marcas/alaparrillaasados/04.jpg" },
+    { "src": "marcas/alaparrillaasados/05.jpg" },
+    { "src": "marcas/alaparrillaasados/06.jpg" },
+    { "src": "marcas/alaparrillaasados/07.jpg" },
+    { "src": "marcas/alaparrillaasados/08.jpg" }
+  ],
+  "particulas": "chispas",
+  "semilla": "alaparrillaasados"
+}
